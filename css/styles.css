@@ -1,0 +1,505 @@
+/* styles.css */
+
+/* Couleurs de base */
+:root {
+    --bg-dark: #121212;
+    --bg-light: #1e1e1e;
+    --text-light: #e0e0e0;
+    --accent-blue: #4d91ff;
+    --accent-blue-hover: #366cc9;
+    --accent-beige: #D4B483;
+    --accent-marron: #8B4513;
+    --accent-bordeaux: #800020;
+}
+
+/* Mode sombre par défaut */
+body {
+    font-family: Arial, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-light);
+    margin: 0;
+    padding: 0;
+}
+
+/* Container principal */
+.container {
+    width: 80%;
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: var(--bg-light);
+    border-radius: 8px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+}
+
+/* Titres */
+h1, h2 {
+    color: var(--accent-beige);
+    margin-bottom: 20px;
+}
+
+/* Liens */
+a {
+    color: var(--accent-bordeaux);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Bouton de style commun en marron */
+button {
+    background-color: var(--accent-marron); /* Marron */
+    color: #ffffff;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 14px;
+    text-align: center;
+    display: inline-block;
+}
+
+
+/* Bouton de recherche */
+.button {
+    padding: 8px 16px;
+    background-color: #A0522D;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.button:hover {
+    background-color: var(--accent-blue-hover);
+}
+
+/* Champs de formulaire */
+input[type="text"], input[type="date"], input[type="number"], input[type="time"], input[type="tel"], select, textarea {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin: 10px 0;
+    background-color: #2c2c2c;
+    color: var(--text-light);
+    border: 1px solid #555;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+textarea {
+    resize: vertical;
+    height: 100px;
+}
+
+/* Tableaux */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 14px;
+    color: var(--text-light);
+}
+
+table th, table td {
+    padding: 12px;
+    text-align: left;
+    border: 1px solid #555;
+}
+
+table th {
+    background-color: #333;
+    font-weight: bold;
+}
+
+table tr:nth-child(even) {
+    background-color: #2a2a2a;
+}
+
+table tr:hover {
+    background-color: #3b3b3b;
+}
+
+/* Conteneur pour le header et le menu */
+header {
+    background-image: url('/assets/site/header.png'); /* Vérifiez que cette image existe */
+    background-size: cover;
+    background-position: 25% 75%;
+    padding: 80px 20px 20px 20px; /* Moins de padding en bas pour laisser la place au menu */
+    box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.5);
+    border-bottom: 2px solid #333;
+    position: relative;
+}
+
+/* Conteneur pour le logo et le titre */
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 10px;
+}
+
+/* Logo */
+.logo {
+    width: 60px;
+    height: auto;
+    margin-right: 15px;
+}
+
+/* Titre principal */
+header h1 {
+    color: #D2B48C;
+    font-size: 28px;
+    font-weight: bold;
+    margin: 0;
+    text-align: center; /* Centrer le titre */
+}
+
+/* Lien pour le titre */
+.header-link {
+    color: #ffffff; /* Blanc */
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.header-link:hover {
+    color: #FFD700; /* Couleur dorée au survol */
+}
+
+/* Menu de navigation positionné en bas du header */
+header nav {
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 10px 20px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center; /* Centre les liens */
+    gap: 15px; /* Espacement entre les liens */
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+header nav a {
+    color: #A0522D;
+    margin: 0 10px;
+    font-weight: bold;
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: color 0.3s ease, border-bottom 0.3s ease;
+    padding: 8px 12px;
+}
+
+header nav a:hover {
+    color: #FFD700;
+    border-bottom: 2px solid #FFD700;
+}
+
+/* Style pour le dropdown */
+.dropdown {
+    display: inline-block;
+    position: relative;
+}
+
+.dropbtn {
+    background-color: transparent;
+    color: #A0522D;
+    font-weight: bold;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    padding: 8px 12px;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #1e1e1e;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+}
+
+.dropdown-content a {
+    color: #fff;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown-content a:hover {
+    background-color: #333;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    color: #777;
+    font-size: 12px;
+    padding: 20px;
+    background-color: var(--bg-light);
+    border-top: 1px solid #333;
+}
+
+/* Messages d'erreur et de succès */
+.error-message {
+    color: #ff4d4d;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.success-message {
+    color: #4dff88;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+/* Bouton d'action à droite */
+.button-container {
+    text-align: right;
+    margin-bottom: 20px;
+}
+
+/* Indication de section */
+h3 {
+    color: var(--accent-marron);
+    font-size: 1.3em;
+}
+
+/* Style des listes */
+ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+ul li {
+    padding: 5px 0;
+    font-size: 1.1em;
+}
+
+
+/* Style pour le lien Nom Prénom */
+/* Styles pour les résultats de recherche */
+.individu-result, .agent-result {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #444;
+    gap: 10px;
+}
+
+/* Bouton "+" en vert pour ajouter un individu ou un agent */
+.individu-result button, .agent-result button {
+    background-color: #28a745; /* Vert */
+    color: white;
+    border: none;
+    font-size: 14px; /* Taille légèrement plus grande */
+    padding: 4px 8px;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background-color 0.3s;
+}
+
+.individu-result button:hover, .agent-result button:hover {
+    background-color: #218838; /* Vert foncé au survol */
+}
+
+/* Styles pour les individus et agents sélectionnés avec plus de séparation */
+.individu-selected, .agent-selected {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    margin: 12px 0; /* Espace en haut et en bas de chaque élément sélectionné */
+    border-bottom: 2px solid #666; /* Ligne de séparation plus épaisse */
+    gap: 10px;
+}
+
+
+/* Bouton "X" en rouge bordeaux pour supprimer un individu ou un agent */
+.individu-selected button, .agent-selected button {
+    background-color: var(--accent-bordeaux);
+    color: white;
+    border: none;
+    font-size: 14px; /* Taille légèrement plus grande */
+    padding: 4px 8px;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background-color 0.3s;
+}
+
+.individu-selected button:hover, .agent-selected button:hover {
+    background-color: #a00020; /* Rouge bordeaux foncé au survol */
+}
+
+
+.individu-selected button:hover, .agent-selected button:hover {
+    background-color: #a00020; /* Couleur au survol pour le bouton de suppression */
+}
+
+.individu-link {
+    font-weight: bold;
+    color: #FF6347; /* Couleur de texte rouge orangé pour se démarquer */
+    text-decoration: none;
+    transition: color 0.3s ease, background-color 0.3s ease;
+    padding: 5px 8px;
+    border-radius: 4px;
+}
+
+.individu-link:hover {
+    color: #FFD700; /* Couleur dorée au survol */
+    background-color: rgba(255, 215, 0, 0.2); /* Fond légèrement doré au survol */
+    text-decoration: underline;
+}
+#details-display {
+    display: none;
+    position: absolute;
+    background-color: #222222; /* Fond sombre */
+    color: #fff; /* Texte en blanc */
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 5px; /* Coins arrondis */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Ombre */
+    z-index: 1000;
+}
+
+/* Styles pour les statuts des convocations */
+.status-passed {
+    background-color: #ff4c4c; /* Rouge pour "Convocation dépassée" */
+    color: white;
+    text-align: center;
+    font-weight: bold;
+}
+
+.status-upcoming {
+    background-color: #ffcc00; /* Jaune pour "À venir" */
+    color: black;
+    text-align: center;
+    font-weight: bold;
+}
+
+.status-present {
+    background-color: #32cd32; /* Vert pour "Présent" */
+    color: white;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* Bouton stylé */
+.action-button {
+    background-color: var(--accent-marron); /* Marron */
+    color: #ffffff;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 14px;
+    text-align: center;
+    display: inline-block;
+    margin-bottom: 15px;
+}
+
+.action-button:hover {
+    background-color: #6e3b1f; /* Teinte plus foncée pour le hover */
+}
+/* Conteneur de recherche et bouton en ligne */
+.search-container {
+    margin-bottom: 20px;
+}
+
+/* Formulaire de recherche organisé en ligne */
+.search-form {
+    display: flex; /* Utilise Flexbox pour l'alignement horizontal */
+    align-items: center; /* Aligne les éléments verticalement */
+    gap: 10px; /* Espacement entre la barre de recherche, la liste et le bouton */
+}
+
+/* Champ de recherche */
+#search-bar {
+    flex: 2; /* Permet au champ de recherche de prendre plus d'espace */
+    padding: 8px;
+    border: 1px solid #555; /* Couleur sombre cohérente */
+    border-radius: 4px;
+    background-color: var(--bg-light);
+    color: var(--text-light);
+}
+
+/* Liste déroulante */
+#search-filter {
+    flex: 1; /* Prend moins d'espace que la barre de recherche */
+    padding: 8px;
+    border: 1px solid #555;
+    border-radius: 4px;
+    background-color: var(--bg-light);
+    color: var(--text-light);
+}
+
+/* Style du bouton "Ajouter un Casier" aligné à droite */
+.add-button {
+    background-color: #8B4513; /* Marron */
+    color: #ffffff;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 14px;
+    text-decoration: none;
+    text-align: center;
+    margin-left: 10px; /* Espacement entre le champ de recherche et le bouton */
+}
+
+.add-button:hover {
+    background-color: #6e3b1f; /* Teinte plus foncée pour le hover */
+}
+
+/* Barre de pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 20px 0;
+    padding: 10px 0;
+    font-size: 16px;
+}
+
+.pagination-button {
+    display: inline-block;
+    padding: 8px 12px;
+    border-radius: 4px;
+    background-color: var(--accent-beige);
+    color: #333;
+    font-weight: bold;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.pagination-button:hover {
+    background-color: var(--accent-blue-hover);
+    color: #fff;
+}
+
+.pagination-button.active {
+    background-color: var(--accent-blue);
+    color: #fff;
+    pointer-events: none;
+    font-weight: bold;
+}
+
+.pagination-button.prev, .pagination-button.next {
+    background-color: var(--bg-dark);
+    color: var(--accent-beige);
+    font-weight: bold;
+}
+
+.pagination-button.prev:hover, .pagination-button.next:hover {
+    background-color: var(--accent-blue-hover);
+    color: #fff;
+}

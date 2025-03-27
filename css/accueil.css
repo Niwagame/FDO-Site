@@ -1,0 +1,182 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #121212;
+    color: #ddd;
+}
+
+.header-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #222;
+    color: #fff;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+    padding: 15px 0;
+    box-sizing: border-box;
+}
+
+.title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.nav-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.nav-links {
+    display: flex;
+    gap: 20px;
+}
+
+.nav-links a {
+    color: #ffcc00;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.nav-links a:hover {
+    color: #b36b00;
+}
+
+.login-btn {
+    padding: 10px 20px;
+    background-color: #b36b00;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* Conteneur principal */
+.container {
+    max-width: 1000px;
+    margin: 80px auto 0;
+    padding: 20px;
+}
+
+/* Titre de section */
+.section-title {
+    background-color: #333;
+    padding: 10px;
+    font-weight: bold;
+    font-size: 20px;
+    margin: 20px 0 10px;
+    color: #b36b00;
+    text-align: center;
+}
+
+/* Style du tableau */
+.table-style {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #333;
+    color: #ddd;
+    margin-bottom: 20px;
+}
+
+.table-style th, .table-style td {
+    padding: 10px;
+    text-align: left;
+    border: 1px solid #fff; /* Bordure blanche pour chaque cellule */
+}
+
+.table-style th {
+    background-color: #444;
+    color: #b36b00;
+}
+
+/* Couleurs spécifiques pour les codes radio */
+.table-style .blue { background-color: #336699; color: #fff; }
+.table-style .red { background-color: #cc3333; color: #fff; }
+.table-style .green { background-color: #339966; color: #fff; }
+.table-style .yellow { background-color: #cccc33; color: #000; }
+
+/* Style de la section juridiction */
+.juridiction-content {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.juridiction-content img {
+    width: 30%; /* Taille réduite */
+    height: auto;
+    margin-top: 10px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Pied de page */
+.footer-text {
+    text-align: center;
+    padding: 20px;
+    background-color: #222;
+    color: #fff;
+    font-size: 14px;
+}
+.droit-content {
+    background-color: #3A75A6;
+    color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    margin: 20px 0;
+}
+
+.droit-content p {
+    line-height: 1.6;
+    font-size: 16px;
+    margin: 10px 0;
+}
+
+.important-note {
+    background-color: #083D77;
+    color: #fff;
+    text-align: center;
+    font-weight: bold;
+    padding: 10px;
+    margin-top: 20px;
+    border-radius: 4px;
+}
+
+.procedure-title {
+    background-color: #083D77;
+    color: #fff;
+    padding: 10px;
+    text-align: center;
+    font-weight: bold;
+    margin-top: 20px;
+    border-radius: 4px;
+}
+
+.procedure-list {
+    background-color: #EAF0F6;
+    color: #333;
+    padding: 20px;
+    border-radius: 4px;
+    list-style-type: none;
+    margin: 0;
+    padding-left: 10px;
+}
+
+.procedure-list li {
+    border-bottom: 1px solid #ccc;
+    padding: 8px 0;
+    font-weight: bold;
+}
+
+.procedure-list li:last-child {
+    border-bottom: none;
+}
