@@ -1,6 +1,5 @@
 <?php
 require_once '../config.php';
-session_start();
 
 $discord = $config['discord'];
 $client_id = $discord['client_id'];

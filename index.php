@@ -128,7 +128,7 @@ require_once 'config.php'; // Assurez-vous que le chemin est correct
 
 
 <footer>
-    <div class="footer-text">© 2024 BCSO - Tous droits réservés - Niwagame</div>
+    <div class="footer-text">© 2025 BCSO - Tous droits réservés - Niwagame</div>
 </footer>
 
 </body>
