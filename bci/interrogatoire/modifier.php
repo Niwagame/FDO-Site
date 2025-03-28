@@ -13,7 +13,7 @@ $config = parse_ini_file('../../config.ini', true);
 $lead_bci_id = $config['roles']['lead_bci'] ?? null;
 
 if (
-    !isset($_SESSION['user_authenticated']) || 
+    !isset($_SESSION['user_authenticated']) ||
     $_SESSION['user_authenticated'] !== true ||
     !in_array($lead_bci_id, $_SESSION['roles'] ?? [])
 ) {
@@ -32,7 +32,7 @@ if (!$interrogatoire) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $date = $_POST['date_interrogatoire'] ?? '';
+    $date = $_POST['date_interrogatoire'] ?? null;
     $deposition = $_POST['deposition'] ?? '';
     $analyse = $_POST['analyse'] ?? '';
     $hypotheses = $_POST['hypotheses'] ?? '';
@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         WHERE id = ?
     ");
     $stmt->execute([
-        $date, $deposition, $analyse, $hypotheses, $faits,
+        $date ?: null, $deposition, $analyse, $hypotheses, $faits,
         $questions, $reponses, $infos, json_encode($medias),
         $interro_id
     ]);
@@ -83,37 +83,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php include '../../includes/header.php'; ?>
 
 <div class="container">
-    <h2>Modifier l'Interrogatoire</h2>
+    <h2>✏️ Modifier l'Interrogatoire</h2>
 
     <form method="post" enctype="multipart/form-data">
         <label>Date de l'interrogatoire :</label>
-        <input type="date" name="date_interrogatoire" value="<?= htmlspecialchars($interrogatoire['date_interrogatoire']); ?>" required>
+        <input type="date" name="date_interrogatoire" value="<?= htmlspecialchars($interrogatoire['date_interrogatoire'] ?? '') ?>">
 
         <label>Déposition :</label>
-        <textarea name="deposition" required><?= htmlspecialchars($interrogatoire['deposition']); ?></textarea>
+        <textarea name="deposition" required><?= htmlspecialchars($interrogatoire['deposition']) ?></textarea>
 
         <label>Analyse de l'interrogatoire :</label>
-        <textarea name="analyse" required><?= htmlspecialchars($interrogatoire['analyse']); ?></textarea>
+        <textarea name="analyse" required><?= htmlspecialchars($interrogatoire['analyse']) ?></textarea>
 
         <label>Hypothèses émises :</label>
-        <textarea name="hypotheses"><?= htmlspecialchars($interrogatoire['hypotheses']); ?></textarea>
+        <textarea name="hypotheses"><?= htmlspecialchars($interrogatoire['hypotheses']) ?></textarea>
 
         <label>Faits importants :</label>
-        <textarea name="faits_importants"><?= htmlspecialchars($interrogatoire['faits_importants']); ?></textarea>
+        <textarea name="faits_importants"><?= htmlspecialchars($interrogatoire['faits_importants']) ?></textarea>
 
         <label>Questions posées :</label>
-        <textarea name="questions_posees"><?= htmlspecialchars($interrogatoire['questions_posees']); ?></textarea>
+        <textarea name="questions_posees"><?= htmlspecialchars($interrogatoire['questions_posees']) ?></textarea>
 
         <label>Réponses :</label>
-        <textarea name="reponses"><?= htmlspecialchars($interrogatoire['reponses']); ?></textarea>
+        <textarea name="reponses"><?= htmlspecialchars($interrogatoire['reponses']) ?></textarea>
 
         <label>Informations complémentaires :</label>
-        <textarea name="infos_complementaires"><?= htmlspecialchars($interrogatoire['infos_complementaires']); ?></textarea>
+        <textarea name="infos_complementaires"><?= htmlspecialchars($interrogatoire['infos_complementaires']) ?></textarea>
 
         <label>Ajouter des fichiers :</label>
         <input type="file" name="fichiers_media[]" multiple>
 
-        <button type="submit">Enregistrer les modifications</button>
+        <?php
+        $medias = json_decode($interrogatoire['fichiers_media'] ?? '[]', true);
+        if (!empty($medias)) {
+            echo '<h4>Médias existants :</h4><ul>';
+            foreach ($medias as $media) {
+                $ext = pathinfo($media, PATHINFO_EXTENSION);
+                if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif'])) {
+                    echo "<li><img src=\"$media\" alt=\"media\" style=\"max-width:100px;\"></li>";
+                } else {
+                    echo "<li><a href=\"$media\" target=\"_blank\">$media</a></li>";
+                }
+            }
+            echo '</ul>';
+        }
+        ?>
+
+        <button type="submit">💾 Enregistrer les modifications</button>
     </form>
 </div>
 

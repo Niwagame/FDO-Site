@@ -2,12 +2,16 @@
 session_start();
 require_once '../../config.php';
 
+// Récupération des rôles
+$config = parse_ini_file('../../config.ini', true);
+$bci_id = $config['roles']['bci'] ?? null;
+
 // Vérifie que l'utilisateur est connecté et a le rôle BCI
 if (
     !isset($_SESSION['user_authenticated']) || 
     $_SESSION['user_authenticated'] !== true || 
     !isset($_SESSION['roles']) || 
-    !in_array($roles['bci'], $_SESSION['roles'])
+    !in_array($bci_id, $_SESSION['roles'])
 ) {
     echo "<p style='color: red; text-align: center;'>Accès refusé : vous n'avez pas les permissions nécessaires.</p>";
     exit();
@@ -55,9 +59,12 @@ if (!empty($interrogatoire['fichiers_media'])) {
 <div class="container">
     <h2>🕵️‍♂️ Détails de l'Interrogatoire</h2>
 
-    <p><strong>Date :</strong> <?= htmlspecialchars(date("d/m/Y à H\hi", strtotime($interrogatoire['date_interrogatoire']))); ?></p>
+    <p><strong>Date :</strong> 
+        <?= $interrogatoire['created_at'] ? htmlspecialchars(date("d/m/Y à H\hi", strtotime($interrogatoire['created_at']))) : '<em>Non spécifiée</em>'; ?>
+    </p>
+
     <p><strong>Individu interrogé :</strong> <?= htmlspecialchars($interrogatoire['prenom'] . ' ' . $interrogatoire['nom']); ?></p>
-    <p><strong>Agent :</strong> <?= htmlspecialchars($interrogatoire['agent_id']); ?></p>
+    <p><strong>Agent :</strong> <?= htmlspecialchars($interrogatoire['agent_id'] ?? 'Inconnu'); ?></p>
 
     <hr>
 

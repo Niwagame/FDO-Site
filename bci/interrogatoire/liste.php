@@ -2,23 +2,26 @@
 session_start();
 require_once '../../config.php';
 
+$config = parse_ini_file('../../config.ini', true);
+$bci_id = $config['roles']['bci'] ?? null;
+
 // Vérifie que l'utilisateur est connecté et a le rôle BCI
 if (
     !isset($_SESSION['user_authenticated']) || 
     $_SESSION['user_authenticated'] !== true || 
     !isset($_SESSION['roles']) || 
-    !in_array($roles['bci'], $_SESSION['roles'])
+    !in_array($bci_id, $_SESSION['roles'])
 ) {
     echo "<p style='color: red; text-align: center;'>Accès refusé : vous n'avez pas les permissions nécessaires.</p>";
     exit();
 }
 
-// Récupère tous les interrogatoires avec jointure sur casiers (nom/prénom) et agent
+// Récupération des interrogatoires avec nom/prénom et ID casier
 $stmt = $pdo->query("
-    SELECT i.id, i.date_interrogatoire, i.agent_id, c.nom, c.prenom
+    SELECT i.id, i.created_at, i.agent_id, i.casier_id, c.nom, c.prenom
     FROM interrogatoires i
     LEFT JOIN casiers c ON i.casier_id = c.id
-    ORDER BY i.date_interrogatoire DESC
+    ORDER BY i.created_at DESC
 ");
 $interrogatoires = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
@@ -40,7 +43,7 @@ $interrogatoires = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <table>
             <thead>
                 <tr>
-                    <th>Date</th>
+                    <th>Date & Heure</th>
                     <th>Individu Interrogé</th>
                     <th>Agent Interrogateur</th>
                     <th>Actions</th>
@@ -49,9 +52,13 @@ $interrogatoires = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <tbody>
                 <?php foreach ($interrogatoires as $interro): ?>
                     <tr>
-                        <td><?= htmlspecialchars(date("d/m/Y à H\hi", strtotime($interro['date_interrogatoire']))); ?></td>
-                        <td><?= htmlspecialchars($interro['prenom'] . ' ' . $interro['nom']); ?></td>
-                        <td><?= htmlspecialchars($interro['agent_id']); ?></td>
+                        <td><?= htmlspecialchars(date("d/m/Y à H\hi", strtotime($interro['created_at']))); ?></td>
+                        <td>
+                            <a href="/tablette/casier/details.php?id=<?= $interro['casier_id']; ?>" class="individu-link">
+                                <?= htmlspecialchars($interro['prenom'] . ' ' . $interro['nom']); ?>
+                            </a>
+                        </td>
+                        <td><?= htmlspecialchars($interro['agent_id'] ?? 'Inconnu'); ?></td>
                         <td>
                             <a href="details.php?id=<?= $interro['id']; ?>" class="button">Détails</a>
                             <a href="modifier.php?id=<?= $interro['id']; ?>" class="button">Modifier</a>

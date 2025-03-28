@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once '../../config.php';
+date_default_timezone_set('Europe/Paris');
 
 if (!isset($_GET['casier_id'])) {
     echo "Casier non spécifié.";
@@ -10,7 +11,7 @@ if (!isset($_GET['casier_id'])) {
 $casier_id = $_GET['casier_id'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $date = $_POST['date_interrogatoire'] ?? '';
+    $datetime = date('Y-m-d H:i:s'); // Récupère automatiquement la date et l'heure actuelle 
     $deposition = $_POST['deposition'] ?? '';
     $analyse = $_POST['analyse'] ?? '';
     $hypotheses = $_POST['hypotheses'] ?? '';
@@ -96,8 +97,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <form method="post" enctype="multipart/form-data">
-        <label>Date de l'interrogatoire :</label>
-        <input type="date" name="date_interrogatoire" required>
 
         <label>Déposition :</label>
         <textarea name="deposition" required></textarea>
