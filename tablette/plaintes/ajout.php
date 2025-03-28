@@ -124,7 +124,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $plainte_id = $pdo->lastInsertId();
 
         // Inclure le fichier pour envoyer les détails de la plainte sur Discord
-        include 'send_plainte_discord.php';
+        require_once 'plaintes_discord.php';
+        sendPlainteToDiscord($plainte_id);
+        
 
         echo "<p>Plainte ajoutée avec succès !</p>";
     } catch (PDOException $e) {

@@ -59,6 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $personne_visee_id, $sexe_visee, $num_tel_visee, 
                         $description_physique, $motif_texte, $agent_id, $plainte_id]);
 
+        require_once 'plaintes_discord.php';
+        sendPlainteUpdateToDiscord($plainte_id);
         // Rediriger vers la page de détails après modification
         header("Location: details.php?id=" . $plainte_id);
         exit();
@@ -66,6 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo "<p>Erreur lors de la mise à jour de la plainte : " . htmlspecialchars($e->getMessage()) . "</p>";
     }
 }
+
 ?>
 
 <!DOCTYPE html>

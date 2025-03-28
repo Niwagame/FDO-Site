@@ -34,13 +34,16 @@ if (!$plainte) {
 
 // Traitement de la suppression de la plainte
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete'])) {
+    require_once 'plaintes_discord.php';
+    sendPlainteDeletionToDiscord($plainte_id);
+
     $stmt = $pdo->prepare("DELETE FROM plaintes WHERE id = ?");
     $stmt->execute([$plainte_id]);
 
-    // Rediriger vers la liste des plaintes après suppression
     header('Location: liste.php');
     exit();
 }
+
 ?>
 
 <!DOCTYPE html>
