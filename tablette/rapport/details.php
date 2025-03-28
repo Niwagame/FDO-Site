@@ -1,6 +1,8 @@
 <?php
 session_start();
 require_once '../../config.php';
+require_once 'rapport_discord.php';
+
 
 if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
     header('Location: /auth/login.php');
@@ -16,7 +18,8 @@ if (!$rapport_id) {
 
 // Supprimer le rapport si le formulaire de suppression est soumis
 if (isset($_POST['delete'])) {
-    include 'send_report_s_discord.php'; // Envoi à Discord
+    $supprime_par = $_SESSION['discord_nickname'] ?? $_SESSION['discord_username'] ?? 'Inconnu';
+    sendReportDeletionToDiscord($rapport_id, $supprime_par);
 
     $stmt = $pdo->prepare("DELETE FROM rapports WHERE id = ?");
     if ($stmt->execute([$rapport_id])) {

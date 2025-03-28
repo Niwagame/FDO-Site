@@ -1,7 +1,8 @@
 <?php
 include '../../config.php';
 include '../../includes/header.php';
-include 'send_report_discord.php'; // Inclure le fichier pour envoyer le message à Discord
+require_once 'rapport_discord.php';
+
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -46,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         // Appel de la fonction pour envoyer le message à Discord
-        sendReportToDiscord($rapport_id);
+        sendReportCreationToDiscord($rapport_id);
 
         echo "<p>Rapport d'arrestation ajouté avec succès !</p>";
     } catch (PDOException $e) {

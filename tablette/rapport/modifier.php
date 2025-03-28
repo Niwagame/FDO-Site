@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once '../../config.php';
+require_once 'rapport_discord.php';
 
 if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
     header('Location: /auth/login.php');
@@ -79,6 +80,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $pdo->prepare("INSERT INTO rapports_individus (rapport_id, casier_id) VALUES (?, ?)");
         $stmt->execute([$rapport_id, $casier_id]);
     }
+
+    $modifie_par = $_SESSION['discord_nickname'] ?? $_SESSION['discord_username'] ?? 'Inconnu';
+    sendReportUpdateToDiscord($rapport_id, $modifie_par);
+
 
     header("Location: details.php?id=" . $rapport_id);
     exit();
