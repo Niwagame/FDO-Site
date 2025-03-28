@@ -503,3 +503,61 @@ ul li {
     background-color: var(--accent-blue-hover);
     color: #fff;
 }
+
+/* Bloc Guide Interrogatoire */
+.interro-guide {
+    background-color: #181818; /* Fond sombre et lisible */
+    border-left: 5px solid var(--accent-blue);
+    padding: 20px;
+    margin-bottom: 30px;
+    border-radius: 8px;
+    color: var(--text-light);
+    font-size: 15px;
+    line-height: 1.6;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+}
+
+
+.interro-guide h3 {
+    color: var(--accent-bordeaux);
+    font-size: 20px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.interro-guide h3::before {
+    content: "📌";
+    font-size: 22px;
+}
+
+.interro-guide ul {
+    padding-left: 20px;
+    margin-top: 0;
+}
+
+.interro-guide ul li {
+    margin-bottom: 10px;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.interro-guide ul li strong {
+    color: var(--accent-beige);
+}
+
+.interro-guide ul ul {
+    margin-top: 5px;
+    padding-left: 20px;
+}
+
+.interro-guide ul ul li {
+    list-style-type: circle;
+    color: #aaa;
+    font-size: 14px;
+}
+
+.interro-guide li::marker {
+    color: var(--accent-blue);
+}

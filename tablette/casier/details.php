@@ -233,17 +233,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete'])) {
         <p>Aucune plainte associée.</p>
     <?php endif; ?>
 
-    <!-- Boutons de modification et de suppression -->
+    <!-- Boutons de modification, interrogatoire et suppression -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+    <!-- À gauche : Ajouter un interrogatoire -->
+    <div>
+        <a href="/bci/interrogatoire/ajouter.php?casier_id=<?= htmlspecialchars($casier_id); ?>" class="button">➕ Ajouter un Interrogatoire</a>
+    </div>
+
+    <!-- À droite : Modifier / Supprimer -->
     <div class="button-container">
         <form action="modifier.php" method="get" style="display: inline;">
             <input type="hidden" name="id" value="<?= htmlspecialchars($casier_id); ?>">
             <button type="submit" class="button edit">Modifier le Casier</button>
         </form>
+
         <form method="post" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce casier ?');" style="display: inline;">
             <button type="submit" name="delete" class="button delete">Supprimer le Casier</button>
         </form>
     </div>
 </div>
+
 
 <?php include '../../includes/footer.php'; ?>
 </body>

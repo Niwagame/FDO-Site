@@ -36,6 +36,7 @@
                 <button class="dropbtn">B.C.I</button>
                 <div class="dropdown-content">
                     <a href="/bci/rapport.php">Rapport</a>
+                    <a href="/bci/interrogatoire/liste.php">Interrogatoires</a>
                 </div>
             </div>
         </nav>
