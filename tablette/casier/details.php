@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once '../../config.php';
-require_once 'del_casier_discord.php'; // Fichier pour envoyer des notifications Discord
+require_once 'casier_discord.php';
 
 // Vérification de l'identifiant du casier
 if (!isset($_GET['id'])) {
@@ -74,7 +74,7 @@ $plaintes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Traitement de la suppression du casier
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete'])) {
-    $required_role_id = '1184997609438461966';
+    $required_role_id = '1354869471558373446';
     $user_roles = $_SESSION['roles'] ?? [];
 
     // Vérification du rôle pour la suppression
@@ -86,6 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete'])) {
     // Envoi de la notification à Discord
     $officier_id = $_SESSION['discord_nickname'] ?? $_SESSION['discord_username'] ?? 'Inconnu';
     sendCasierDeletionToDiscord(
+        $casier_id,
         $individu['nom'],
         $individu['prenom'],
         $date_naissance,

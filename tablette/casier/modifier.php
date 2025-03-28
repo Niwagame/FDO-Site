@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once '../../config.php';
+require_once 'casier_discord.php'; // ✅ Ajouté pour Discord
 
 if (!isset($_GET['id'])) {
     echo "Individu non spécifié.";
@@ -42,32 +43,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $grade = $_POST['grade'];
     $entreprise_id = !empty($_POST['entreprise_id']) ? $_POST['entreprise_id'] : null;
 
-    // Gestion de la nouvelle photo si elle est téléchargée
+    // Photo
     if (!empty($_FILES['photo']['name'])) {
         $photo = basename($_FILES['photo']['name']);
         $upload_dir = '../../assets/images/';
         $upload_file = $upload_dir . $photo;
 
-        // Supprimer l'ancienne photo si elle existe
-        $old_photo_path = $upload_dir . $individu['photo'];
-        if (file_exists($old_photo_path)) {
-            unlink($old_photo_path);
+        if (file_exists($upload_dir . $individu['photo'])) {
+            unlink($upload_dir . $individu['photo']);
         }
 
-        // Déplacer la nouvelle photo
         move_uploaded_file($_FILES['photo']['tmp_name'], $upload_file);
     } else {
-        $photo = $individu['photo']; // Garde la photo actuelle si aucune nouvelle photo n'est téléchargée
+        $photo = $individu['photo'];
     }
 
-    // Mettre à jour les informations du casier dans la base de données
-    $stmt = $pdo->prepare("UPDATE casiers SET nom = ?, prenom = ?, date_naissance = ?, num_tel = ?, affiliation = ?, photo = ?, entreprise_id = ? WHERE id = ?");
-    $stmt->execute([$nom, $prenom, $date_naissance, $num_tel, $affiliation, $photo, $entreprise_id, $casier_id]);
+    // ✅ Mise à jour en base
+    $stmt = $pdo->prepare("UPDATE casiers SET nom = ?, prenom = ?, date_naissance = ?, num_tel = ?, affiliation = ?, photo = ?, entreprise_id = ?, grade = ? WHERE id = ?");
+    $stmt->execute([$nom, $prenom, $date_naissance, $num_tel, $affiliation, $photo, $entreprise_id, $grade, $casier_id]);
 
-    // Rediriger vers la page de détails après modification
+    // ✅ Envoi vers Discord
+    $officier_id = $_SESSION['discord_nickname'] ?? $_SESSION['discord_username'] ?? 'Inconnu';
+    sendCasierUpdateToDiscord($casier_id, $nom, $prenom, $date_naissance, $num_tel, $affiliation, $grade, $entreprise_id, $officier_id);
+
     header("Location: details.php?id=" . $casier_id);
     exit();
 }
+?>
 ?>
 
 <!DOCTYPE html>
@@ -106,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </select>
 
         <label>Grade :</label>
-        <input type="text" name="grade" value="<?= htmlspecialchars($individu['grade']); ?>" required>
+        <input type="text" name="grade" value="<?= htmlspecialchars($individu['grade'] ?? ''); ?>" required>
 
         <!-- Liste déroulante pour les entreprises -->
         <label>Entreprise :</label>

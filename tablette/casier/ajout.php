@@ -1,7 +1,7 @@
 <?php
 include '../../config.php';
 include '../../includes/header.php';
-require_once 'add_casier_discord.php';
+require_once 'casier_discord.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -113,8 +113,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $entreprise = $stmt->fetchColumn() ?? "N/A";
     }
 
-    // Envoyer les données à Discord via le webhook
-    sendCasierToDiscord($nom, $prenom, $date_naissance, $num_tel, $affiliation, $entreprise, $officier_id);
+    // Récupère l'ID du casier après insertion
+    $casier_id = $pdo->lastInsertId();
+
+    // Envoi à Discord
+    sendCasierCreationToDiscord($casier_id, $nom, $prenom, $date_naissance, $num_tel, $affiliation, $entreprise, $officier_id);
 
     echo "<p>Casier ajouté avec succès !</p>";
 }
