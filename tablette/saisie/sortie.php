@@ -48,7 +48,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['remove_saisie'])) {
     }
 
     // Inclure le fichier pour envoyer un message à Discord
-    include 'del_saisie_discord.php';
+    require_once 'saisie_discord.php';
+
+    sendSaisieRetireeToDiscord($saisiesRetirees);
+    
 
     // Redirection vers la page liste.php après le traitement
     header('Location: liste.php');

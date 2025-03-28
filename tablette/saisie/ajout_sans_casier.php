@@ -59,7 +59,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_saisie'])) {
     }
 
     // Inclure le fichier pour envoyer les saisies ajoutées à Discord
-    include 'add_sans_c_saisie_discord.php';
+    require_once 'saisie_discord.php';
+
+    $officier_id = $_SESSION['discord_nickname'] ?? $_SESSION['discord_username'] ?? 'Inconnu';
+    sendSaisieWithoutCasierToDiscord($officier_id, $motif, $saisiesAjoutees);
+    
 }
 ?>
 

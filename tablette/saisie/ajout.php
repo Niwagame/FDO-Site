@@ -101,7 +101,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_saisie'])) {
     }
 
     // Inclure le fichier pour envoyer les saisies ajoutées à Discord, en passant les détails de l'individu et du rapport
-    include 'add_saisie_discord.php';
+    require_once 'saisie_discord.php';
+
+    $officier_id = $_SESSION['discord_nickname'] ?? $_SESSION['discord_username'] ?? 'Inconnu';
+    sendSaisieWithCasierToDiscord($officier_id, $individuDetails, $rapportDetails, $saisiesAjoutees);
+    
 }
 
 
