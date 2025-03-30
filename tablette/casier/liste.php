@@ -6,6 +6,12 @@ if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !
     exit();
 }
 
+// Autoriser uniquement les rôles BCO ou DOJ
+if (!hasRole($roles['bco'], $roles['doj'])) {
+    echo "<p style='color:red;text-align:center;'>Accès refusé : vous n'avez pas les permissions nécessaires pour accéder à cette page.</p>";
+    exit();
+}
+
 // Initialisation des paramètres de recherche et de pagination
 $searchQuery = $_GET['search'] ?? '';
 $limit = 10; // Nombre d'éléments par page

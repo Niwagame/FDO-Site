@@ -7,8 +7,14 @@ if (!isset($_GET['nom'])) {
     exit();
 }
 
-if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
-    header('Location: /auth/login.php');
+$role_bco = $roles['bco'];
+
+if (
+    !isset($_SESSION['user_authenticated']) || 
+    $_SESSION['user_authenticated'] !== true || 
+    !hasRole($role_bco)
+) {
+    echo "<p style='color: red; text-align: center;'>Accès refusé : seuls les membres du BCSO peuvent voir les saisie d'armes.</p>";
     exit();
 }
 

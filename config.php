@@ -6,13 +6,11 @@ if (session_status() === PHP_SESSION_NONE) {
 // Charge la config depuis config.ini
 $config = parse_ini_file(__DIR__ . '/config.ini', true);
 
-// Récupère les rôles en tant que tableau associatif
-$discord_roles = $config['discord_roles'];
-$authorized_roles = $config['authorized_roles'];
+// Récupération centralisée des rôles
 $roles = $config['roles'];
 
+// Connexion à la base de données
 try {
-    // Connexion à la base de données depuis config.ini
     $db = $config['database'];
     $pdo = new PDO(
         "mysql:host={$db['host']};dbname={$db['name']}",
@@ -24,6 +22,7 @@ try {
     die("Erreur de connexion : " . $e->getMessage());
 }
 
+// Fonction de vérification d’authentification
 function checkAuthentication() {
     global $pdo;
 
@@ -43,5 +42,11 @@ function checkAuthentication() {
 
     header('Location: /auth/login.php');
     exit();
+}
+
+// Fonction pour vérifier si l'utilisateur a un rôle autorisé
+function hasRole(...$required_roles) {
+    $user_roles = $_SESSION['roles'] ?? [];
+    return !empty(array_intersect($required_roles, $user_roles));
 }
 ?>

@@ -9,8 +9,16 @@ $guild_id = $discord['guild_id'];
 $client_id = $discord['client_id'];
 $client_secret = $discord['client_secret'];
 $redirect_uri = $discord['redirect_uri'];
-$authorized_roles = $config['authorized_roles'];
 
+// Rôles autorisés à se connecter (adaptés à ton système centralisé dans [roles])
+$roles = $config['roles'];
+$authorized_roles = [
+    $roles['bco'],       // BCSO
+    $roles['cs'],        // CS
+    $roles['doj'],       // DOJ
+    $roles['bci'],       // BCI
+    $roles['lead_bci'],  // Lead BCI
+];
 
 if (isset($_GET['code'])) {
     $code = $_GET['code'];
@@ -85,35 +93,27 @@ if (isset($_GET['code'])) {
 
             // Vérifie si l'utilisateur a l'un des rôles autorisés
             if (array_intersect($authorized_roles, $user_roles)) {
-                // Date d'expiration du token : 1 heure
                 $expiresAt = date("Y-m-d H:i:s", time() + 3600);
 
                 // Vérifie si l'utilisateur est déjà dans la base de données
-                $query = "SELECT * FROM users WHERE discord_id = ?";
-                $stmt = $pdo->prepare($query);
+                $stmt = $pdo->prepare("SELECT * FROM users WHERE discord_id = ?");
                 $stmt->execute([$user_id]);
                 $user = $stmt->fetch();
 
                 if ($user) {
-                    // Mise à jour des informations utilisateur
-                    $updateQuery = "UPDATE users SET username = ?, discriminator = ?, roles = ?, auth_token = ?, expires_at = ? WHERE discord_id = ?";
-                    $stmt = $pdo->prepare($updateQuery);
+                    $stmt = $pdo->prepare("UPDATE users SET username = ?, discriminator = ?, roles = ?, auth_token = ?, expires_at = ? WHERE discord_id = ?");
                     $stmt->execute([$username, $user_info['discriminator'], json_encode($user_roles), $access_token, $expiresAt, $user_id]);
                 } else {
-                    // Insérer un nouvel utilisateur
-                    $insertQuery = "INSERT INTO users (discord_id, username, discriminator, roles, auth_token, expires_at) VALUES (?, ?, ?, ?, ?, ?)";
-                    $stmt = $pdo->prepare($insertQuery);
+                    $stmt = $pdo->prepare("INSERT INTO users (discord_id, username, discriminator, roles, auth_token, expires_at) VALUES (?, ?, ?, ?, ?, ?)");
                     $stmt->execute([$user_id, $username, $user_info['discriminator'], json_encode($user_roles), $access_token, $expiresAt]);
                 }
 
-                // Stockage en session
                 $_SESSION['user_authenticated'] = true;
                 $_SESSION['discord_id'] = $user_id;
                 $_SESSION['discord_username'] = $username;
                 $_SESSION['discord_nickname'] = $nickname;
                 $_SESSION['roles'] = $user_roles;
 
-                // Stockage de l'ID utilisateur dans un cookie avec expiration de 1 heure
                 setcookie("user_id", $pdo->lastInsertId(), time() + 3600, "/");
 
                 header('Location: /tablette/casier/liste.php');
@@ -135,4 +135,3 @@ if (isset($_GET['code'])) {
     echo "Code d'authentification manquant";
     exit();
 }
-?>

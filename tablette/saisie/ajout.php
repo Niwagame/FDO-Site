@@ -7,11 +7,16 @@ $selectedCasier = null;
 $rapports = [];
 $objetOptions = [];
 
-if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
-    header('Location: /auth/login.php');
+$role_bco = $roles['bco'];
+
+if (
+    !isset($_SESSION['user_authenticated']) || 
+    $_SESSION['user_authenticated'] !== true || 
+    !hasRole($role_bco)
+) {
+    echo "<p style='color: red; text-align: center;'>Accès refusé : seuls les membres du BCSO peuvent ajoutes des saisie.</p>";
     exit();
 }
-
 // Récupération des objets disponibles dans `saisie` pour remplir la liste déroulante
 $stmt = $pdo->query("SELECT * FROM saisie");
 $objetOptions = $stmt->fetchAll(PDO::FETCH_ASSOC);

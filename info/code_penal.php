@@ -2,14 +2,13 @@
 session_start();
 require_once '../config.php';
 
-if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
-    header('Location: /auth/login.php');
+$role_bco = $roles['bco'];
+$role_doj = $roles['doj'];
+
+if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true || !hasRole($role_bco) && !hasRole($role_doj)) {
+    echo "<p style='color: red; text-align: center;'>Accès refusé : seuls les membres du BCSO ou du DOJ peuvent accéder à cette page.</p>";
     exit();
 }
-
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 
 $search = $_GET['search'] ?? '';
 $limit = 10;
@@ -70,7 +69,7 @@ $amendes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <tr id="details-<?= $index; ?>" class="details-row" style="display: none;">
                         <td colspan="5">
                             <strong>Article :</strong> <?= htmlspecialchars($amende['article']); ?><br>
-                            <strong>Détails :</strong> <?= htmlspecialchars($amende['details']); ?>
+                            <strong>Détails :</strong> <?= htmlspecialchars((string)($amende['details'] ?? 'Aucun')); ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

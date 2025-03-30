@@ -3,9 +3,11 @@ session_start();
 require_once '../../config.php';
 require_once 'rapport_discord.php';
 
+$role_bco = $roles['bco'];
+$role_doj = $roles['doj'];
 
-if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
-    header('Location: /auth/login.php');
+if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true || !hasRole($role_bco) && !hasRole($role_doj)) {
+    echo "<p style='color: red; text-align: center;'>Accès refusé : seuls les membres du BCSO ou du DOJ peuvent accéder à cette page.</p>";
     exit();
 }
 
@@ -142,9 +144,11 @@ $saisies = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <button type="submit" class="button edit">Modifier le Rapport</button>
     </form>
 
+    <?php if (hasRole($role_bco)): ?>
     <form method="post" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce rapport ?');" style="display: inline;">
         <button type="submit" name="delete" class="button delete">Supprimer le Rapport</button>
     </form>
+    <?php endif; ?>
 </div>
 
 <style>

@@ -2,8 +2,14 @@
 session_start();
 require_once '../../config.php';
 
-if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
-    header('Location: /auth/login.php');
+$role_cs = $roles['cs'];
+
+if (
+    !isset($_SESSION['user_authenticated']) || 
+    $_SESSION['user_authenticated'] !== true || 
+    !hasRole($role_cs)
+) {
+    echo "<p style='color: red; text-align: center;'>Accès refusé : seuls les membres du Command staff peuvent sortirs les saisie.</p>";
     exit();
 }
 

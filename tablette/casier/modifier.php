@@ -1,15 +1,23 @@
 <?php
 session_start();
 require_once '../../config.php';
-require_once 'casier_discord.php'; // ✅ Ajouté pour Discord
+require_once 'casier_discord.php';
 
+// 🔐 Vérifie la présence du casier
 if (!isset($_GET['id'])) {
     echo "Individu non spécifié.";
     exit();
 }
 
-if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
-    header('Location: /auth/login.php');
+// 🔐 Vérifie authentification et rôle BCSO
+$role_bco = $roles['bco'] ?? null;
+
+if (
+    !isset($_SESSION['user_authenticated']) || 
+    $_SESSION['user_authenticated'] !== true ||
+    !hasRole($role_bco)
+) {
+    echo "<p style='color:red; text-align:center;'>Accès refusé : seuls les membres du BCSO peuvent modifier un casier.</p>";
     exit();
 }
 

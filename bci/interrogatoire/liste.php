@@ -2,17 +2,18 @@
 session_start();
 require_once '../../config.php';
 
-$config = parse_ini_file('../../config.ini', true);
-$bci_id = $config['roles']['bci'] ?? null;
+// Récupération des rôles autorisés
+$role_bci = $roles['bci'] ?? null;
+$role_doj = $roles['doj'] ?? null;
 
-// Vérifie que l'utilisateur est connecté et a le rôle BCI
+// Vérifie que l'utilisateur est connecté et a l'un des rôles BCI ou DOJ
 if (
     !isset($_SESSION['user_authenticated']) || 
     $_SESSION['user_authenticated'] !== true || 
     !isset($_SESSION['roles']) || 
-    !in_array($bci_id, $_SESSION['roles'])
+    !(in_array($role_bci, $_SESSION['roles']) || in_array($role_doj, $_SESSION['roles']))
 ) {
-    echo "<p style='color: red; text-align: center;'>Accès refusé : vous n'avez pas les permissions nécessaires.</p>";
+    echo "<p style='color: red; text-align: center;'>Accès refusé : seuls les membres du BCI ou du DOJ peuvent accéder à cette page.</p>";
     exit();
 }
 

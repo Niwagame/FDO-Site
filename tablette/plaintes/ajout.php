@@ -2,12 +2,15 @@
 include '../../config.php';
 include '../../includes/header.php';
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+// 🔐 Vérifie authentification et rôle BCSO
+$role_bco = $roles['bco'] ?? null;
 
-if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
-    header('Location: /auth/login.php');
+if (
+    !isset($_SESSION['user_authenticated']) || 
+    $_SESSION['user_authenticated'] !== true ||
+    !hasRole($role_bco)
+) {
+    echo "<p style='color:red; text-align:center;'>Accès refusé : seuls les membres du BCSO peuvent ajouter une plainte.</p>";
     exit();
 }
 

@@ -2,9 +2,15 @@
 session_start();
 require_once '../../config.php';
 
-// Vérification de l'authentification
-if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
-    header('Location: /auth/login.php');
+// 🔐 Vérifie authentification et rôle BCSO
+$role_bco = $roles['bco'] ?? null;
+
+if (
+    !isset($_SESSION['user_authenticated']) || 
+    $_SESSION['user_authenticated'] !== true ||
+    !hasRole($role_bco)
+) {
+    echo "<p style='color:red; text-align:center;'>Accès refusé : seuls les membres du BCSO peuvent modifier une plainte.</p>";
     exit();
 }
 

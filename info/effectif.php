@@ -2,43 +2,41 @@
 session_start();
 require_once '../config.php';
 
-if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
-    header('Location: /auth/login.php');
+$role_bco = $roles['bco'];
+$role_doj = $roles['doj'];
+
+if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true || (!hasRole($role_bco) && !hasRole($role_doj))) {
+    echo "<p style='color: red; text-align: center;'>Accès refusé : seuls les membres du BCSO ou du DOJ peuvent accéder à cette page.</p>";
     exit();
 }
 
-// Récupération du bot token et de l'ID du serveur depuis la config
+// Récupération des infos depuis config.ini
 $bot_token = $config['discord']['bot_token'];
-$guild_id = $config['discord']['guild_id'];
+$guild_id  = $config['discord']['guild_id'];
+$discord_roles = $config['discord_roles'];
+$grades = $discord_roles;
 
-// Récupération des rôles Discord
-$roles = $discord_roles;
-
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
-// Vider la table effectif avant d'insérer de nouvelles données
+// Vide la table effectif
 $pdo->query("TRUNCATE TABLE effectif");
 
-// Fonction pour mettre à jour la table des effectifs
+// Fonction d'insertion
 function updateEffectifTable($pdo, $name, $grade) {
     $stmt = $pdo->prepare("INSERT INTO effectif (nom, grade) VALUES (?, ?) ON DUPLICATE KEY UPDATE grade = VALUES(grade)");
     $stmt->execute([$name, $grade]);
 }
 
-// Fonction pour récupérer la liste des membres d'un rôle spécifique
+// Récupération des membres
 function getMembersByRole($role_id, $bot_token, $guild_id) {
     $url = "https://discord.com/api/v10/guilds/$guild_id/members?limit=1000";
-    
+
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
         "Authorization: Bot $bot_token",
         "Content-Type: application/json"
     ]);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Enlever la vérification SSL si besoin
-    
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
     $response = curl_exec($ch);
     if (curl_errno($ch)) {
         echo 'Erreur de requête CURL : ' . curl_error($ch);
@@ -48,9 +46,8 @@ function getMembersByRole($role_id, $bot_token, $guild_id) {
     $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     if ($http_code === 429) {
         $retry_after = json_decode($response, true)['retry_after'] ?? 5;
-        echo "<p>Rate limit atteint. Réessayer après {$retry_after} secondes.</p>";
         sleep(ceil($retry_after));
-        return getMembersByRole($role_id, $bot_token, $guild_id); // Réessaye après l'attente
+        return getMembersByRole($role_id, $bot_token, $guild_id);
     }
 
     if ($http_code !== 200) {
@@ -59,32 +56,19 @@ function getMembersByRole($role_id, $bot_token, $guild_id) {
     }
 
     curl_close($ch);
-
     $members = json_decode($response, true);
 
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        echo 'Erreur JSON : ' . json_last_error_msg();
+    if (json_last_error() !== JSON_ERROR_NONE || !is_array($members)) {
+        echo 'Erreur JSON ou réponse inattendue.';
         return [];
     }
 
-    if (!$members || !is_array($members)) {
-        echo "Erreur de récupération des membres ou réponse inattendue.";
-        return [];
-    }
-
-    // Filtrer les membres ayant le rôle spécifié
-    $filtered_members = array_filter($members, function ($member) use ($role_id) {
-        return in_array($role_id, $member['roles']);
-    });
-
-    return array_map(function ($member) {
-        // Utilise le surnom si présent, sinon le nom d'utilisateur
-        return !empty($member['nick']) ? $member['nick'] : $member['user']['username'];
-    }, $filtered_members);
+    $filtered_members = array_filter($members, fn($m) => in_array($role_id, $m['roles']));
+    return array_map(fn($m) => $m['nick'] ?? $m['user']['username'], $filtered_members);
 }
 
-// Mettre à jour la table effectif avec les données récupérées
-foreach ($roles as $grade => $role_id) {
+// Mise à jour table
+foreach ($grades as $grade => $role_id) {
     $members = getMembersByRole($role_id, $bot_token, $guild_id);
     foreach ($members as $member) {
         updateEffectifTable($pdo, $member, $grade);
@@ -105,7 +89,7 @@ foreach ($roles as $grade => $role_id) {
 
 <div class="container">
     <h2>Effectifs BCSO</h2>
-    <?php foreach ($roles as $grade => $role_id): ?>
+    <?php foreach ($grades as $grade => $role_id): ?>
         <h3><?= htmlspecialchars($grade); ?></h3>
         <ul>
             <?php
@@ -120,6 +104,7 @@ foreach ($roles as $grade => $role_id) {
         </ul>
     <?php endforeach; ?>
 </div>
+
 
 <?php include '../includes/footer.php'; ?>
 </body>

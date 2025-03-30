@@ -3,8 +3,16 @@ include '../config.php';
 include '../includes/header.php';
 require_once __DIR__ . '/../bci/vendor/autoload.php';
 
-if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
-    header('Location: /auth/login.php');
+// Récupère l'ID du rôle BCSO depuis config.ini
+$role_bco = $roles['bco'] ?? null;
+
+// Vérifie l'authentification et l'autorisation BCSO
+if (
+    !isset($_SESSION['user_authenticated']) ||
+    $_SESSION['user_authenticated'] !== true ||
+    !hasRole($role_bco)
+) {
+    echo "<p style='color:red; text-align:center;'>Accès refusé : seuls les membres du BCSO peuvent ajouter un casier.</p>";
     exit();
 }
 

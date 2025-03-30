@@ -3,14 +3,22 @@ session_start();
 require_once '../../config.php';
 require_once 'casier_discord.php';
 
+$roles_bcs = $roles['bco'];
+$roles_cs  = $roles['cs'];
+$roles_doj = $roles['doj'];
+
 // Vérification de l'identifiant du casier
 if (!isset($_GET['id'])) {
     echo "Individu non spécifié.";
     exit();
 }
 
-if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
-    header('Location: /auth/login.php');
+if (
+    !isset($_SESSION['user_authenticated']) ||
+    $_SESSION['user_authenticated'] !== true ||
+    !(hasRole($roles_bcs) || hasRole($roles_doj))
+) {
+    echo "<p style='color: red; text-align: center;'>Accès refusé : seuls les membres du BCSO ou du DOJ peuvent accéder à cette page.</p>";
     exit();
 }
 
@@ -31,13 +39,10 @@ if (!$individu) {
     exit();
 }
 
-// Formatage de la date de naissance
 $date_naissance = date("d-m-Y", strtotime($individu['date_naissance']));
-
-// Chemin de la photo de l'individu
 $photoPath = '../../assets/images/' . $individu['photo'];
 
-// Récupération des rapports associés
+// Récupération des rapports
 $stmt = $pdo->prepare("
     SELECT r.id AS rapport_id, r.date_arrestation, a.description AS motif, r.officier_id AS agent
     FROM rapports r
@@ -49,7 +54,7 @@ $stmt = $pdo->prepare("
 $stmt->execute([$casier_id]);
 $rapports = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Récupération des objets saisis associés
+// Objets saisis
 $stmt = $pdo->prepare("
     SELECT sc.quantite, s.nom AS objet_nom, s.poids, r.date_arrestation, r.id AS rapport_id
     FROM saisie_c sc
@@ -61,7 +66,7 @@ $stmt = $pdo->prepare("
 $stmt->execute([$casier_id]);
 $saisies = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Récupération des plaintes associées
+// Plaintes associées
 $stmt = $pdo->prepare("
     SELECT p.id AS plainte_id, p.date_creation, c1.nom AS plaignant_nom, c1.prenom AS plaignant_prenom, c2.nom AS visee_nom, c2.prenom AS visee_prenom, p.motif_texte
     FROM plaintes p
@@ -72,18 +77,13 @@ $stmt = $pdo->prepare("
 $stmt->execute(['casier_id' => $casier_id]);
 $plaintes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Traitement de la suppression du casier
+// Suppression : seulement si rôle CS
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete'])) {
-    $required_role_id = '1354869471558373446';
-    $user_roles = $_SESSION['roles'] ?? [];
-
-    // Vérification du rôle pour la suppression
-    if (!in_array($required_role_id, $user_roles)) {
+    if (!hasRole($roles_cs)) {
         echo "Vous n'avez pas l'autorisation de supprimer ce casier.";
         exit();
     }
 
-    // Envoi de la notification à Discord
     $officier_id = $_SESSION['discord_nickname'] ?? $_SESSION['discord_username'] ?? 'Inconnu';
     sendCasierDeletionToDiscord(
         $casier_id,
@@ -96,21 +96,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete'])) {
         $officier_id
     );
 
-    // Suppression des rapports, saisies et plaintes associées
     foreach ($rapports as $rapport) {
         $rapport_id = $rapport['rapport_id'];
-        $stmt = $pdo->prepare("DELETE FROM rapports WHERE id = ?");
-        $stmt->execute([$rapport_id]);
-        $stmt = $pdo->prepare("DELETE FROM rapports_individus WHERE rapport_id = ?");
-        $stmt->execute([$rapport_id]);
+        $pdo->prepare("DELETE FROM rapports WHERE id = ?")->execute([$rapport_id]);
+        $pdo->prepare("DELETE FROM rapports_individus WHERE rapport_id = ?")->execute([$rapport_id]);
     }
 
-    $stmt = $pdo->prepare("DELETE FROM saisie_c WHERE idcasier = ?");
-    $stmt->execute([$casier_id]);
-    $stmt = $pdo->prepare("DELETE FROM plaintes WHERE plaignant_id = ? OR personne_visee_id = ?");
-    $stmt->execute([$casier_id, $casier_id]);
-    $stmt = $pdo->prepare("DELETE FROM casiers WHERE id = ?");
-    $stmt->execute([$casier_id]);
+    $pdo->prepare("DELETE FROM saisie_c WHERE idcasier = ?")->execute([$casier_id]);
+    $pdo->prepare("DELETE FROM plaintes WHERE plaignant_id = ? OR personne_visee_id = ?")->execute([$casier_id, $casier_id]);
+    $pdo->prepare("DELETE FROM casiers WHERE id = ?")->execute([$casier_id]);
 
     if (!empty($individu['photo']) && file_exists($photoPath)) {
         unlink($photoPath);

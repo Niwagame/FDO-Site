@@ -3,15 +3,17 @@ include '../../config.php';
 include '../../includes/header.php';
 require_once 'rapport_discord.php';
 
+$role_bco = $roles['bco'];
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
-    header('Location: /auth/login.php');
+if (
+    !isset($_SESSION['user_authenticated']) || 
+    $_SESSION['user_authenticated'] !== true || 
+    !hasRole($role_bco)
+) {
+    echo "<p style='color: red; text-align: center;'>Accès refusé : seuls les membres du BCSO peuvent ajouter un rapport.</p>";
     exit();
 }
+
 
 // Utiliser le surnom Discord si disponible, sinon utiliser le pseudo global
 $officier_id = $_SESSION['discord_nickname'] ?? $_SESSION['discord_username'] ?? 'Inconnu';

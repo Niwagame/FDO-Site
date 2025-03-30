@@ -1,14 +1,21 @@
 <?php
 include '../../config.php';
-include '../../includes/header.php';
 require_once 'casier_discord.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
-    header('Location: /auth/login.php');
+// Récupère l'ID du rôle BCSO depuis config.ini
+$role_bco = $roles['bco'] ?? null;
+
+// Vérifie l'authentification et l'autorisation BCSO
+if (
+    !isset($_SESSION['user_authenticated']) ||
+    $_SESSION['user_authenticated'] !== true ||
+    !hasRole($role_bco)
+) {
+    echo "<p style='color:red; text-align:center;'>Accès refusé : seuls les membres du BCSO peuvent ajouter un casier.</p>";
     exit();
 }
 
@@ -23,7 +30,7 @@ $entreprises = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $stmt = $pdo->query("SELECT id, name FROM user_groups ORDER BY name");
 $groups = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
-
+<?php include '../../includes/header.php'; ?>
 <div class="container">
 <link rel="stylesheet" href="../../css/styles.css">
     <h2>Ajouter un Casier</h2>
