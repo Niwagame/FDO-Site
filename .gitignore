@@ -1,2 +1,5 @@
 config.ini
 idée.txt
+assets/images/*
+!assets/images/README.md
+
