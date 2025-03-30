@@ -9,25 +9,31 @@ if (
     $_SESSION['user_authenticated'] !== true || 
     !hasRole($role_bco)
 ) {
-    echo "<p style='color: red; text-align: center;'>Accès refusé : seuls les membres du BCSO peuvent voir les saisie.</p>";
+    echo "<p style='color: red; text-align: center;'>Accès refusé : seuls les membres du BCSO peuvent voir les saisies.</p>";
     exit();
 }
 
-$search = isset($_GET['search']) ? $_GET['search'] : '';
+$search = $_GET['search'] ?? '';
 
 $query = "SELECT * FROM saisie";
 $params = [];
 
 if (!empty($search)) {
-    $query .= " WHERE nom LIKE ? OR categorie LIKE ?";
-    $params[] = '%' . $search . '%';
-    $params[] = '%' . $search . '%';
+    $query .= " WHERE nom LIKE ? OR categorie LIKE ? OR nom IN (
+        SELECT nom FROM s_armes WHERE numero_serie LIKE ?
+    )";    
+    $params = [
+        '%' . $search . '%',
+        '%' . $search . '%',
+        '%' . $search . '%'
+    ];
 }
 
 $stmt = $pdo->prepare($query);
 $stmt->execute($params);
 $saisies = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+// Poids total
 $poids_total = 0;
 foreach ($saisies as $saisie) {
     $quantite = $saisie['quantite'] ?? 0;
@@ -42,44 +48,6 @@ foreach ($saisies as $saisie) {
     <meta charset="UTF-8">
     <title>Liste des Saisies</title>
     <link rel="stylesheet" href="../../css/styles.css">
-    <style>
-        /* Ajustement pour aligner le formulaire de recherche et les boutons d'action */
-        .action-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            gap: 10px;
-        }
-
-        .search-form {
-            display: flex;
-            gap: 5px;
-            flex: 1;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 10px;
-        }
-
-        /* Styles pour les boutons d'action */
-        .button {
-            padding: 8px 16px;
-            font-size: 14px;
-            background-color: var(--accent-marron);
-            color: #ffffff;
-            border: none;
-            border-radius: 5px;
-            text-align: center;
-            cursor: pointer;
-            text-decoration: none;
-        }
-
-        .button:hover {
-            background-color: #6e3b1f;
-        }
-    </style>
 </head>
 <body>
 <?php include '../../includes/header.php'; ?>
@@ -87,15 +55,13 @@ foreach ($saisies as $saisie) {
 <div class="container">
     <h2>Liste des Saisies</h2>
 
-    <!-- Barre d'action pour la recherche et les boutons d'ajout -->
+    <!-- Barre d'action : recherche + boutons -->
     <div class="action-bar">
-        <!-- Formulaire de recherche -->
         <form method="GET" action="liste.php" class="search-form">
-            <input type="text" name="search" placeholder="Rechercher par nom ou catégorie" value="<?= htmlspecialchars($search ?? ''); ?>">
+            <input type="text" name="search" placeholder="Rechercher par nom, catégorie ou N° série" value="<?= htmlspecialchars($search); ?>">
             <button type="submit" class="button">Rechercher</button>
         </form>
 
-        <!-- Boutons d'ajout de saisie et sortie de saisie alignés -->
         <div class="button-group">
             <a href="ajout.php" class="button add-button">Ajouter Saisie</a>
             <a href="ajout_sans_casier.php" class="button add-button">Ajouter Saisie sans Rapport</a>
@@ -103,8 +69,8 @@ foreach ($saisies as $saisie) {
         </div>
     </div>
 
-    <!-- Tableau des saisies -->
-    <table border="1" cellpadding="10" cellspacing="0">
+    <!-- Tableau -->
+    <table>
         <thead>
             <tr>
                 <th>Image</th>
@@ -118,10 +84,14 @@ foreach ($saisies as $saisie) {
             <?php if (count($saisies) > 0): ?>
                 <?php foreach ($saisies as $saisie): ?>
                     <tr>
-                        <td><img src="/<?= str_replace('\\', '/', htmlspecialchars($saisie['image'] ?? '')); ?>" alt="Image de <?= htmlspecialchars($saisie['nom'] ?? ''); ?>" width="50"></td>
+                        <td>
+                            <img src="/<?= str_replace('\\', '/', htmlspecialchars($saisie['image'] ?? '')); ?>" alt="Image de <?= htmlspecialchars($saisie['nom'] ?? ''); ?>" width="50">
+                        </td>
                         <td>
                             <?php if ($saisie['categorie'] === 'Armes'): ?>
-                                <a href="armes.php?nom=<?= urlencode($saisie['nom']); ?>"><?= htmlspecialchars($saisie['nom']); ?></a>
+                                <a href="armes.php?nom=<?= urlencode($saisie['nom']); ?>">
+                                    <?= htmlspecialchars($saisie['nom']); ?>
+                                </a>
                             <?php else: ?>
                                 <?= htmlspecialchars($saisie['nom'] ?? ''); ?>
                             <?php endif; ?>

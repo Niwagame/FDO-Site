@@ -60,14 +60,23 @@ $individus = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Récupérer les objets saisis associés au rapport
 $stmt = $pdo->prepare("
-    SELECT sc.quantite, s.nom AS objet_nom, s.poids, c.nom AS individu_nom, c.prenom AS individu_prenom, c.id AS casier_id
+    SELECT 
+        sc.quantite,
+        s.nom AS objet_nom,
+        s.poids,
+        c.nom AS individu_nom,
+        c.prenom AS individu_prenom,
+        c.id AS casier_id,
+        sa.numero_serie
     FROM saisie_c sc
     JOIN saisie s ON sc.saisie_id = s.id
     JOIN casiers c ON sc.idcasier = c.id
+    LEFT JOIN s_armes sa ON sa.nom = s.nom AND sa.casier_id = c.id
     WHERE sc.idrapport = ?
 ");
 $stmt->execute([$rapport_id]);
 $saisies = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 ?>
 
 <!DOCTYPE html>
@@ -120,18 +129,26 @@ $saisies = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <th>Objet</th>
                     <th>Quantité</th>
                     <th>Poids Total (kg)</th>
+                    <th>N° Série</th>
                     <th>Individu</th>
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($saisies as $saisie): ?>
-                    <tr>
-                        <td><?= htmlspecialchars($saisie['objet_nom']); ?></td>
-                        <td><?= htmlspecialchars($saisie['quantite']); ?></td>
-                        <td><?= htmlspecialchars(number_format($saisie['poids'] * $saisie['quantite'], 2)); ?></td>
-                        <td><a href="/tablette/casier/details.php?id=<?= $saisie['casier_id']; ?>"><?= htmlspecialchars($saisie['individu_nom'] . ' ' . $saisie['individu_prenom']); ?></a></td>
-                    </tr>
-                <?php endforeach; ?>
+            <?php foreach ($saisies as $saisie): ?>
+                <tr>
+                    <td><?= htmlspecialchars($saisie['objet_nom']); ?></td>
+                    <td><?= htmlspecialchars($saisie['quantite']); ?></td>
+                    <td><?= htmlspecialchars(number_format($saisie['poids'] * $saisie['quantite'], 2)); ?></td>
+                    <td>
+                        <?= !empty($saisie['numero_serie']) ? htmlspecialchars($saisie['numero_serie']) : '-'; ?>
+                    </td>
+                    <td>
+                        <a href="/tablette/casier/details.php?id=<?= $saisie['casier_id']; ?>">
+                            <?= htmlspecialchars($saisie['individu_nom'] . ' ' . $saisie['individu_prenom']); ?>
+                        </a>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
             </tbody>
         </table>
     <?php else: ?>

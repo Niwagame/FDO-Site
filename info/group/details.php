@@ -61,10 +61,17 @@ $rapports = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Récupérer les saisies associées aux rapports des individus du groupe
 $stmt = $pdo->prepare("
-    SELECT sc.quantite, s.nom AS objet_nom, s.poids, r.date_arrestation, r.id AS rapport_id
+    SELECT 
+        sc.quantite, 
+        s.nom AS objet_nom, 
+        s.poids, 
+        r.date_arrestation, 
+        r.id AS rapport_id,
+        sa.numero_serie
     FROM saisie_c sc
     JOIN saisie s ON sc.saisie_id = s.id
     JOIN rapports r ON sc.idrapport = r.id
+    LEFT JOIN s_armes sa ON sa.nom = s.nom AND sa.casier_id = sc.idcasier
     WHERE sc.idcasier IN (SELECT id FROM casiers WHERE affiliation = ?)
     ORDER BY r.date_arrestation DESC
 ");
@@ -158,22 +165,24 @@ $total_saisies = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <th>Objet</th>
                     <th>Quantité</th>
                     <th>Poids Total (kg)</th>
+                    <th>N° Série</th>
                     <th>Date de Saisie</th>
                     <th>Rapport</th>
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($saisies as $saisie): ?>
-                    <tr>
-                        <td><?= htmlspecialchars($saisie['objet_nom']); ?></td>
-                        <td><?= htmlspecialchars($saisie['quantite']); ?></td>
-                        <td><?= htmlspecialchars(number_format($saisie['poids'] * $saisie['quantite'], 2)); ?></td>
-                        <td><?= htmlspecialchars(date("d-m-Y", strtotime($saisie['date_arrestation']))); ?></td>
-                        <td>
-                            <a href="/tablette/rapport/details.php?id=<?= $saisie['rapport_id']; ?>" class="button">Voir Rapport</a>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
+            <?php foreach ($saisies as $saisie): ?>
+                <tr>
+                    <td><?= htmlspecialchars($saisie['objet_nom']); ?></td>
+                    <td><?= htmlspecialchars($saisie['quantite']); ?></td>
+                    <td><?= htmlspecialchars(number_format($saisie['poids'] * $saisie['quantite'], 2)); ?></td>
+                    <td><?= !empty($saisie['numero_serie']) ? htmlspecialchars($saisie['numero_serie']) : '-'; ?></td>
+                    <td><?= htmlspecialchars(date("d-m-Y", strtotime($saisie['date_arrestation']))); ?></td>
+                    <td>
+                        <a href="/tablette/rapport/details.php?id=<?= $saisie['rapport_id']; ?>" class="button">Voir Rapport</a>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
             </tbody>
         </table>
     <?php else: ?>
