@@ -1,3 +1,28 @@
+## [1.0.4] - 2025-04-03  
+### Ajouté  
+- Création de la table `droit_miranda` pour enregistrer individuellement les droits lus (droit + heure).
+- Possibilité d’ajouter dynamiquement plusieurs droits Miranda via l’interface utilisateur.
+- Affichage des droits Miranda existants dans la page de modification d’un rapport.
+- Ajout d’un champ “Heure de privation de liberté” dans les rapports.
+- Affichage du numéro de série des armes saisies dans les logs Discord, au format `(N°: XXXXX)`.
+
+### Modifié  
+- Refonte du système de gestion des droits Miranda (ancien champ remplacé par des lignes en BDD).
+- Mise à jour de la page `ajout.php` pour utiliser le nouveau format de saisie des droits Miranda (liste déroulante + heure).
+- Mise à jour de la page `modifier.php` pour refléter la nouvelle logique (affichage dynamique et suppression possible).
+- Mise à jour de la page `details.php` (présumée) pour afficher les droits Miranda associés au rapport.
+- Les agents et les individus sont maintenant gérés via des champs dynamiques avec `Set()` JS et boutons de suppression.
+- Amélioration de l'affichage du motif sélectionné avec un infobulle contenant l’article et les détails.
+- Envoi Discord ajusté pour inclure les nouvelles données lors de la création et modification de rapports.
+- Envoi Discord des saisies enrichi pour inclure le numéro de série des armes si renseigné.
+
+### Corrigé  
+- Bug où les droits Miranda n’étaient pas bien enregistrés (ancien format écrasé ou ignoré).
+- Problème de doublons ou suppression incomplète des agents / individus dans `modifier.php`.
+
+### Supprimé  
+- Suppression des anciens champs `demandes_droits` et `heure_droits` devenus obsolètes.
+
 ## [1.0.3] - 2025-03-30  
 ### Ajouté  
 - Vérification dynamique des numéros de série lors de la sortie des saisies (affichage "✅ Existe" ou "❌ Inexistant")  

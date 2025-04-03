@@ -99,7 +99,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_saisie'])) {
             }
 
             // Ajouter à la liste des saisies ajoutées pour Discord
-            $saisiesAjoutees[] = ['nom' => $saisieDetails['nom'], 'quantite' => $quantite];
+            $saisiesAjoutees[] = [
+                'nom' => $saisieDetails['nom'],
+                'quantite' => $quantite,
+                'numero_serie' => $numero_serie ?? null
+            ];            
         } else {
             echo "<p>Erreur : l'objet saisi avec l'ID $saisie_id n'a pas été trouvé dans la table `saisie`.</p>";
         }

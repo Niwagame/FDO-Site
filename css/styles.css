@@ -599,3 +599,23 @@ ul li {
     background-color: #6e3b1f;
 }
 
+.droit-miranda-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.btn-ajout, .btn-principal {
+    background-color: #a44b00;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-ajout {
+    margin-top: 10px;
+}
+

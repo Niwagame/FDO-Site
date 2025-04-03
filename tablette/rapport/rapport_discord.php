@@ -7,7 +7,7 @@ function sendReportCreationToDiscord($rapport_id) {
 
     $stmt = $pdo->prepare("
         SELECT r.date_arrestation, r.amende, r.retention, r.rapport_text, r.coop, r.miranda_time, 
-               r.demandes_droits, r.heure_droits, r.officier_id, a.description AS motif_description
+               r.officier_id, a.description AS motif_description
         FROM rapports r
         LEFT JOIN amende a ON r.motif = a.id
         WHERE r.id = ?
@@ -17,6 +17,7 @@ function sendReportCreationToDiscord($rapport_id) {
 
     if (!$data) return;
 
+    // Récupérer les individus
     $stmt = $pdo->prepare("
         SELECT c.nom, c.prenom
         FROM casiers c
@@ -25,6 +26,15 @@ function sendReportCreationToDiscord($rapport_id) {
     ");
     $stmt->execute([$rapport_id]);
     $individus = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Récupérer les droits Miranda
+    $stmt = $pdo->prepare("
+        SELECT droit, heure_droit 
+        FROM droit_miranda 
+        WHERE rapport_id = ?
+    ");
+    $stmt->execute([$rapport_id]);
+    $droits = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $date_now = date('d/m/Y à H\hi');
 
@@ -35,10 +45,15 @@ function sendReportCreationToDiscord($rapport_id) {
     $message .= "**Peine :** {$data['retention']}\n";
     $message .= "**Coopération :** {$data['coop']}/10\n";
     $message .= "**Miranda :** {$data['miranda_time']}\n";
-    $message .= "**Droits demandés :** {$data['demandes_droits']}\n";
-    $message .= "**Heure des droits :** {$data['heure_droits']}\n";
-    $message .= "**Individus concernés :**\n";
 
+    if (!empty($droits)) {
+        $message .= "**Droits demandés :**\n";
+        foreach ($droits as $d) {
+            $message .= "- {$d['droit']} à {$d['heure_droit']}\n";
+        }
+    }
+
+    $message .= "**Individus concernés :**\n";
     foreach ($individus as $i) {
         $message .= "- {$i['nom']} {$i['prenom']}\n";
     }
@@ -51,13 +66,12 @@ function sendReportCreationToDiscord($rapport_id) {
     sendToDiscord('rapport', $message);
 }
 
-
 function sendReportUpdateToDiscord($rapport_id) {
     global $pdo;
 
     $stmt = $pdo->prepare("
         SELECT r.date_arrestation, r.amende, r.retention, r.rapport_text, r.coop, r.miranda_time, 
-               r.demandes_droits, r.heure_droits, r.officier_id, a.description AS motif_description
+               r.officier_id, a.description AS motif_description
         FROM rapports r
         LEFT JOIN amende a ON r.motif = a.id
         WHERE r.id = ?
@@ -67,6 +81,7 @@ function sendReportUpdateToDiscord($rapport_id) {
 
     if (!$data) return;
 
+    // Individus
     $stmt = $pdo->prepare("
         SELECT c.nom, c.prenom
         FROM casiers c
@@ -75,6 +90,15 @@ function sendReportUpdateToDiscord($rapport_id) {
     ");
     $stmt->execute([$rapport_id]);
     $individus = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Droits
+    $stmt = $pdo->prepare("
+        SELECT droit, heure_droit 
+        FROM droit_miranda 
+        WHERE rapport_id = ?
+    ");
+    $stmt->execute([$rapport_id]);
+    $droits = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $user = $_SESSION['discord_nickname'] ?? $_SESSION['discord_username'] ?? 'Inconnu';
     $date_now = date('d/m/Y à H\hi');
@@ -86,10 +110,15 @@ function sendReportUpdateToDiscord($rapport_id) {
     $message .= "**Peine :** {$data['retention']}\n";
     $message .= "**Coopération :** {$data['coop']}/10\n";
     $message .= "**Miranda :** {$data['miranda_time']}\n";
-    $message .= "**Droits demandés :** {$data['demandes_droits']}\n";
-    $message .= "**Heure des droits :** {$data['heure_droits']}\n";
-    $message .= "**Individus concernés :**\n";
 
+    if (!empty($droits)) {
+        $message .= "**Droits demandés :**\n";
+        foreach ($droits as $d) {
+            $message .= "- {$d['droit']} à {$d['heure_droit']}\n";
+        }
+    }
+
+    $message .= "**Individus concernés :**\n";
     foreach ($individus as $i) {
         $message .= "- {$i['nom']} {$i['prenom']}\n";
     }
@@ -101,7 +130,6 @@ function sendReportUpdateToDiscord($rapport_id) {
 
     sendToDiscord('rapport', $message);
 }
-
 
 function sendReportDeletionToDiscord($rapport_id) {
     global $pdo;
@@ -144,5 +172,4 @@ function sendReportDeletionToDiscord($rapport_id) {
 
     sendToDiscord('rapport', $message);
 }
-
 ?>

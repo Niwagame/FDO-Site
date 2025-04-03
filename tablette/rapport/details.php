@@ -11,14 +11,12 @@ if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !
     exit();
 }
 
-// Récupérer l'ID du rapport à partir des paramètres GET
 $rapport_id = $_GET['id'] ?? null;
 if (!$rapport_id) {
     echo "Rapport non spécifié.";
     exit();
 }
 
-// Supprimer le rapport si le formulaire de suppression est soumis
 if (isset($_POST['delete'])) {
     $supprime_par = $_SESSION['discord_nickname'] ?? $_SESSION['discord_username'] ?? 'Inconnu';
     sendReportDeletionToDiscord($rapport_id, $supprime_par);
@@ -33,7 +31,7 @@ if (isset($_POST['delete'])) {
     }
 }
 
-// Récupérer les détails du rapport
+// Récupération du rapport
 $stmt = $pdo->prepare("
     SELECT r.*, a.description AS motif_description, a.article AS motif_article, a.details AS motif_details, r.officier_id AS agent
     FROM rapports r
@@ -42,13 +40,12 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([$rapport_id]);
 $rapport = $stmt->fetch(PDO::FETCH_ASSOC);
-
 if (!$rapport) {
     echo "Rapport non trouvé.";
     exit();
 }
 
-// Récupérer les individus impliqués dans le rapport
+// Individus impliqués
 $stmt = $pdo->prepare("
     SELECT c.id AS casier_id, c.nom, c.prenom
     FROM casiers c
@@ -58,7 +55,7 @@ $stmt = $pdo->prepare("
 $stmt->execute([$rapport_id]);
 $individus = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Récupérer les objets saisis associés au rapport
+// Objets saisis
 $stmt = $pdo->prepare("
     SELECT 
         sc.quantite,
@@ -77,6 +74,10 @@ $stmt = $pdo->prepare("
 $stmt->execute([$rapport_id]);
 $saisies = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+// Droits Miranda
+$stmt = $pdo->prepare("SELECT droit, heure_droit FROM droit_miranda WHERE rapport_id = ?");
+$stmt->execute([$rapport_id]);
+$droits_miranda = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -100,15 +101,26 @@ $saisies = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <hr>
         <p><strong>Définitions :</strong> <?= htmlspecialchars($rapport['motif_details'] ?? 'Non renseignés'); ?></p>
     </div>
-    <hr>
-    <p><strong>Rapport d'arrestation:</strong> <?= nl2br(htmlspecialchars($rapport['rapport_text'] ?? 'Non renseigné')); ?></p>
+
+    <p><strong>Rapport d'arrestation :</strong><br><?= nl2br(htmlspecialchars($rapport['rapport_text'] ?? 'Non renseigné')); ?></p>
     <p><strong>Coopération :</strong> <?= htmlspecialchars($rapport['coop'] ?? 'Non renseignée'); ?></p>
-    <p><strong>Temps Miranda :</strong> <?= htmlspecialchars($rapport['miranda_time'] ?? 'Non renseigné'); ?></p>
-    <p><strong>Droits Demander :</strong> <?= htmlspecialchars($rapport['demandes_droits'] ?? 'Non renseignées'); ?></p>
-    <p><strong>Heure des Droits :</strong> <?= htmlspecialchars($rapport['heure_droits'] ?? 'Non renseignée'); ?></p>
+    <p><strong>Heure de privation de liberté :</strong> <?= htmlspecialchars($rapport['heure_privation_liberte'] ?? 'Non renseignée'); ?></p>
+    <p><strong>Droit Miranda lu à :</strong> <?= htmlspecialchars($rapport['miranda_time'] ?? 'Non renseigné'); ?></p>
+
+    <?php if (!empty($droits_miranda)): ?>
+        <div class="droits-box">
+            <h4>Droits demandés :</h4>
+            <ul>
+                <?php foreach ($droits_miranda as $droit): ?>
+                    <li><strong><?= htmlspecialchars($droit['droit']) ?></strong> à <?= htmlspecialchars($droit['heure_droit']) ?></li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+    <?php endif; ?>
+
     <p><strong>Amende :</strong> <?= isset($rapport['amende']) ? number_format($rapport['amende'], 0, ',', ' ') . " $" : 'Non renseignée'; ?></p>
     <p><strong>Peine :</strong> <?= htmlspecialchars($rapport['retention'] ?? 'Non renseignée'); ?></p>
-    <p><strong>Agent :</strong> <?= htmlspecialchars($rapport['agent'] ?? 'Inconnu'); ?></p>
+    <p><strong>Agent(s) :</strong> <?= htmlspecialchars($rapport['agent'] ?? 'Inconnu'); ?></p>
 
     <h3>Individus Impliqués</h3>
     <?php if (!empty($individus)): ?>
@@ -139,9 +151,7 @@ $saisies = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <td><?= htmlspecialchars($saisie['objet_nom']); ?></td>
                     <td><?= htmlspecialchars($saisie['quantite']); ?></td>
                     <td><?= htmlspecialchars(number_format($saisie['poids'] * $saisie['quantite'], 2)); ?></td>
-                    <td>
-                        <?= !empty($saisie['numero_serie']) ? htmlspecialchars($saisie['numero_serie']) : '-'; ?>
-                    </td>
+                    <td><?= $saisie['numero_serie'] ?? '-'; ?></td>
                     <td>
                         <a href="/tablette/casier/details.php?id=<?= $saisie['casier_id']; ?>">
                             <?= htmlspecialchars($saisie['individu_nom'] . ' ' . $saisie['individu_prenom']); ?>
@@ -155,34 +165,30 @@ $saisies = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <p>Aucun objet saisi pour ce rapport.</p>
     <?php endif; ?>
 
-    <!-- Boutons de modification et suppression -->
     <form action="modifier.php" method="get" style="display: inline;">
         <input type="hidden" name="id" value="<?= htmlspecialchars($rapport_id); ?>">
         <button type="submit" class="button edit">Modifier le Rapport</button>
     </form>
 
     <?php if (hasRole($role_bco)): ?>
-    <form method="post" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce rapport ?');" style="display: inline;">
-        <button type="submit" name="delete" class="button delete">Supprimer le Rapport</button>
-    </form>
+        <form method="post" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce rapport ?');" style="display: inline;">
+            <button type="submit" name="delete" class="button delete">Supprimer le Rapport</button>
+        </form>
     <?php endif; ?>
 </div>
 
 <style>
-    .motif-box {
-        background-color: #222222;
-        border: 1px solid #ccc;
+    .motif-box, .droits-box {
+        background-color: #222;
+        border: 1px solid #555;
         padding: 15px;
         border-radius: 8px;
         margin-bottom: 20px;
     }
-    .motif-box hr {
-        border: 0;
-        border-top: 1px solid #ddd;
-        margin: 10px 0;
-    }
-</style>
 
-<?php include '../../includes/footer.php'; ?>
-</body>
-</html>
+    .droits-box ul {
+        list-style-type: square;
+        margin-left: 20px;
+    }
+
+    .dro

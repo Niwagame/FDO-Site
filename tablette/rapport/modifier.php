@@ -2,6 +2,7 @@
 session_start();
 require_once '../../config.php';
 require_once 'rapport_discord.php';
+include '../../includes/header.php';
 
 $role_bco = $roles['bco'];
 
@@ -10,19 +11,17 @@ if (
     $_SESSION['user_authenticated'] !== true || 
     !hasRole($role_bco)
 ) {
-    echo "<p style='color: red; text-align: center;'>Accès refusé : seuls les membres du BCSO peuvent ajouter un rapport.</p>";
+    echo "<p style='color: red; text-align: center;'>Accès refusé : seuls les membres du BCSO peuvent modifier un rapport.</p>";
     exit();
 }
 
-
-if (!isset($_GET['id'])) {
+if (!isset($_GET['id']) || empty($_GET['id'])) {
     echo "Rapport non spécifié.";
     exit();
 }
 
-$rapport_id = $_GET['id'];
+$rapport_id = intval($_GET['id']);
 
-// Récupération des détails du rapport pour les pré-remplir
 $stmt = $pdo->prepare("
     SELECT r.*, a.description AS motif_description, a.montant AS motif_montant, a.peine AS motif_peine, a.article AS motif_article, a.details AS motif_details
     FROM rapports r
@@ -37,7 +36,6 @@ if (!$rapport) {
     exit();
 }
 
-// Récupération des individus impliqués actuels
 $stmt = $pdo->prepare("
     SELECT c.id AS casier_id, c.nom, c.prenom
     FROM casiers c
@@ -47,182 +45,233 @@ $stmt = $pdo->prepare("
 $stmt->execute([$rapport_id]);
 $individus_actuels = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Récupération des agents impliqués actuels (ajouter une colonne `agents` dans la table rapports si nécessaire)
 $agents_actuels = explode(', ', $rapport['officier_id'] ?? '');
 
-// Récupération des amendes pour le menu déroulant des motifs
 $stmt = $pdo->query("SELECT id, description, montant, peine, article, details FROM amende");
 $amendes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Traitement du formulaire de modification
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $date_arrestation = $_POST['date_arrestation'];
-    $motif = $_POST['motif'];
-    $amende = $_POST['amende'];
-    $retention = $_POST['retention'];
-    $rapport_text = $_POST['rapport_text'];
-    $coop = $_POST['coop'];
-    $miranda_time = $_POST['miranda_time'];
-    $demandes_droits = $_POST['demandes_droits'];
-    $heure_droits = $_POST['heure_droits'];
-    $individus = explode(',', rtrim($_POST['individus'], ','));
-    $agents = explode(',', rtrim($_POST['agents'], ','));
+$stmt = $pdo->prepare("SELECT droit, heure_droit FROM droit_miranda WHERE rapport_id = ?");
+$stmt->execute([$rapport_id]);
+$miranda_droits = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Concaténer les noms des agents impliqués pour les enregistrer dans officier_id
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $date_arrestation = $_POST['date_arrestation'] ?? '';
+    $motif = $_POST['motif'] ?? '';
+    $amende = $_POST['amende'] ?? '';
+    $retention = $_POST['retention'] ?? '';
+    $rapport_text = $_POST['rapport_text'] ?? '';
+    $coop = $_POST['coop'] ?? '';
+    $heure_privation_liberte = $_POST['heure_privation_liberte'] ?? '';
+    $miranda_time = $_POST['miranda_time'] ?? '';
+    $individus = isset($_POST['individus']) ? explode(',', rtrim($_POST['individus'], ',')) : [];
+    $agents = isset($_POST['agents']) ? explode(',', rtrim($_POST['agents'], ',')) : [];
+
     $agents_concat = implode(', ', $agents);
 
-    // Mise à jour des informations du rapport dans la base de données
-    $stmt = $pdo->prepare("
-        UPDATE rapports 
-        SET date_arrestation = ?, motif = ?, amende = ?, retention = ?, rapport_text = ?, coop = ?, miranda_time = ?, demandes_droits = ?, heure_droits = ?, officier_id = ?
-        WHERE id = ?
-    ");
-    $stmt->execute([$date_arrestation, $motif, $amende, $retention, $rapport_text, $coop, $miranda_time, $demandes_droits, $heure_droits, $agents_concat, $rapport_id]);
+    try {
+        $pdo->beginTransaction();
 
-    // Mise à jour des individus impliqués
-    $stmt = $pdo->prepare("DELETE FROM rapports_individus WHERE rapport_id = ?");
-    $stmt->execute([$rapport_id]);
+        $stmt = $pdo->prepare("
+            UPDATE rapports 
+            SET date_arrestation = ?, motif = ?, amende = ?, retention = ?, rapport_text = ?, coop = ?, heure_privation_liberte = ?, miranda_time = ?, officier_id = ?
+            WHERE id = ?
+        ");
+        $stmt->execute([$date_arrestation, $motif, $amende, $retention, $rapport_text, $coop, $heure_privation_liberte, $miranda_time, $agents_concat, $rapport_id]);
 
-    foreach ($individus as $casier_id) {
+        $stmt = $pdo->prepare("DELETE FROM rapports_individus WHERE rapport_id = ?");
+        $stmt->execute([$rapport_id]);
+
         $stmt = $pdo->prepare("INSERT INTO rapports_individus (rapport_id, casier_id) VALUES (?, ?)");
-        $stmt->execute([$rapport_id, $casier_id]);
+        foreach ($individus as $casier_id) {
+            $stmt->execute([$rapport_id, $casier_id]);
+        }
+
+        $stmt = $pdo->prepare("DELETE FROM droit_miranda WHERE rapport_id = ?");
+        $stmt->execute([$rapport_id]);
+
+        if (!empty($_POST['droit_miranda_nom']) && !empty($_POST['droit_miranda_heure'])) {
+            $stmt = $pdo->prepare("INSERT INTO droit_miranda (rapport_id, droit, heure_droit) VALUES (?, ?, ?)");
+            foreach ($_POST['droit_miranda_nom'] as $index => $droit_nom) {
+                $droit_heure = $_POST['droit_miranda_heure'][$index] ?? null;
+                if (!empty($droit_nom) && !empty($droit_heure)) {
+                    $stmt->execute([$rapport_id, $droit_nom, $droit_heure]);
+                }
+            }
+        }
+
+        $pdo->commit();
+
+        $modifie_par = $_SESSION['discord_nickname'] ?? $_SESSION['discord_username'] ?? 'Inconnu';
+        sendReportUpdateToDiscord($rapport_id, $modifie_par);
+
+        header("Location: details.php?id=" . $rapport_id);
+        exit();
+    } catch (PDOException $e) {
+        $pdo->rollBack();
+        echo "<p>Erreur lors de la mise à jour du rapport : " . $e->getMessage() . "</p>";
     }
-
-    $modifie_par = $_SESSION['discord_nickname'] ?? $_SESSION['discord_username'] ?? 'Inconnu';
-    sendReportUpdateToDiscord($rapport_id, $modifie_par);
-
-
-    header("Location: details.php?id=" . $rapport_id);
-    exit();
 }
 ?>
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Modifier le Rapport d'Arrestation</title>
-    <link rel="stylesheet" href="../../css/styles.css">
-</head>
-<body>
-<?php include '../../includes/header.php'; ?>
-
+<link rel="stylesheet" href="../../css/styles.css">
 <div class="container">
     <h2>Modifier le Rapport d'Arrestation</h2>
-    <form action="modifier.php?id=<?= htmlspecialchars($rapport_id); ?>" method="post">
+    <form action="modifier.php?id=<?= htmlspecialchars($rapport_id); ?>" method="post" id="form-rapport">
 
         <label>Date d'Arrestation :</label>
         <input type="date" name="date_arrestation" value="<?= htmlspecialchars($rapport['date_arrestation'] ?? ''); ?>" required>
 
-        <!-- Individus impliqués avec ajout dynamique -->
         <label>Individus Impliqués :</label>
         <input type="text" id="search-individu" placeholder="Rechercher un individu...">
-        <div id="individu-results" style="border: 1px solid #ddd; display: none; max-height: 150px; overflow-y: auto;"></div>
-    <div id="individus-selected">
-        <?php foreach ($individus_actuels as $individu): ?>
-            <div class="individu-selected" data-id="<?= htmlspecialchars($individu['casier_id']); ?>">
-                <?= htmlspecialchars($individu['nom']) . ' ' . htmlspecialchars($individu['prenom']); ?>
-                <button type="button" class="btn-remove-individu" 
-                    onclick="deleteIndividu(<?= htmlspecialchars($individu['casier_id']); ?>, <?= htmlspecialchars($rapport_id); ?>)">X</button>
-            </div>
-        <?php endforeach; ?>
-</div>
-
-
-
+        <div id="individu-results" style="border: 1px solid #ddd; display: none;"></div>
+        <div id="individus-selected">
+            <h4>Individus Sélectionnés :</h4>
+            <?php foreach ($individus_actuels as $individu): ?>
+                <div class="individu-selected" data-id="<?= $individu['casier_id']; ?>">
+                    <?= htmlspecialchars($individu['nom'] . ' ' . $individu['prenom']); ?>
+                    <button type="button" onclick="removeIndividu(<?= $individu['casier_id']; ?>)">X</button>
+                </div>
+            <?php endforeach; ?>
+        </div>
         <input type="hidden" name="individus" id="individus-input" value="<?= implode(',', array_column($individus_actuels, 'casier_id')); ?>">
 
-        <!-- Agents impliqués avec ajout dynamique -->
         <label>Agents Impliqués :</label>
         <input type="text" id="search-agent" placeholder="Rechercher un agent...">
-        <div id="agent-results" style="border: 1px solid #ddd; display: none; max-height: 150px; overflow-y: auto;"></div>
-        <div id="agents-selected">
-            <h4>Agents Sélectionnés :</h4>
+        <div id="agent-results" style="border: 1px solid #ddd; display: none;"></div>
+        <div id="agents-selected"><h4>Agents Sélectionnés :</h4>
             <?php foreach ($agents_actuels as $agent): ?>
-                <div class="agent-selected" data-name="<?= htmlspecialchars($agent); ?>">
+                <div class="agent-selected" data-name="<?= $agent; ?>">
                     <?= htmlspecialchars($agent); ?>
-                    <button type="button" onclick="removeAgent('<?= htmlspecialchars($agent); ?>')">X</button>
+                    <button type="button" onclick="removeAgent('<?= $agent; ?>')">X</button>
                 </div>
             <?php endforeach; ?>
         </div>
         <input type="hidden" name="agents" id="agents-input" value="<?= implode(',', $agents_actuels); ?>">
 
-        <!-- Liste des motifs avec point d'interrogation pour afficher l'article et les détails -->
-        <label>Motif :</label>
-        <select name="motif" id="motif" required onchange="updateAmendeRetentions()">
-            <option value="">-- Sélectionnez un motif --</option>
-            <?php
-            $amendesJS = [];
-            foreach ($amendes as $amende) {
-                $selected = $rapport['motif'] == $amende['id'] ? 'selected' : '';
-                echo "<option value='{$amende['id']}' $selected>{$amende['description']}</option>";
-                $amendesJS[$amende['id']] = [
-                    'montant' => $amende['montant'],
-                    'peine' => $amende['peine'],
-                    'article' => $amende['article'],
-                    'details' => $amende['details']
-                ];
-            }
-            ?>
-        </select>
-        <span id="info-tooltip" title="Cliquez sur un motif pour voir les détails" style="cursor: pointer;">❓</span>
-        <div id="details-display" style="display: none; position: absolute; background: #fff; border: 1px solid #ccc; padding: 10px; z-index: 1000;"></div>
+        <label>Rechercher un Motif :</label>
+        <input type="text" id="motif-search" oninput="searchMotif()" placeholder="Saisir un motif..." autocomplete="off">
+        <div style="display: flex; align-items: center; gap: 5px;">
+            <select name="motif" id="motif-select" onchange="updateAmendeRetentions()" required>
+                <option value="">-- Sélectionnez un motif --</option>
+                <?php foreach ($amendes as $amende): ?>
+                    <option 
+                        value="<?= $amende['id']; ?>" 
+                        <?= ($rapport['motif'] == $amende['id']) ? 'selected' : ''; ?>
+                        data-montant="<?= $amende['montant']; ?>" 
+                        data-peine="<?= $amende['peine']; ?>"
+                        data-article="<?= $amende['article']; ?>"
+                        data-details="<?= htmlspecialchars($amende['details']); ?>"
+                    >
+                        <?= htmlspecialchars($amende['description']); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            <span id="info-tooltip" style="cursor: pointer; font-size: 20px; color: red;" title="">❓</span>
+        </div>
 
-        <!-- Champs d'amende et de rétention pré-remplis et modifiables -->
         <label>Amende :</label>
-        <input type="number" name="amende" id="amende" value="<?= htmlspecialchars($rapport['amende'] ?? ''); ?>" placeholder="Montant de l'amende" required>
+        <input type="number" name="amende" id="amende" value="<?= $rapport['amende']; ?>" required>
 
         <label>Peine :</label>
-        <input type="text" name="retention" id="retention" value="<?= htmlspecialchars($rapport['retention'] ?? ''); ?>" placeholder="Durée de rétention" required>
+        <input type="text" name="retention" id="retention" value="<?= $rapport['retention']; ?>" required>
 
         <label>Rapport d'Arrestation :</label>
-        <textarea name="rapport_text" placeholder="Détails du rapport" required><?= htmlspecialchars($rapport['rapport_text'] ?? ''); ?></textarea>
+        <textarea name="rapport_text" required><?= htmlspecialchars($rapport['rapport_text']); ?></textarea>
 
-        <!-- Champs supplémentaires -->
         <label>Individu Coopératif (0 à 10) :</label>
-        <input type="number" name="coop" min="0" max="10" value="<?= htmlspecialchars($rapport['coop'] ?? ''); ?>" required>
+        <input type="number" name="coop" min="0" max="10" value="<?= $rapport['coop']; ?>" required>
 
-        <label>Droits Miranda lus à :</label>
-        <input type="time" name="miranda_time" value="<?= htmlspecialchars($rapport['miranda_time'] ?? ''); ?>" required>
+        <label>Heure de privation de liberté :</label>
+        <input type="time" name="heure_privation_liberte" value="<?= $rapport['heure_privation_liberte']; ?>" required>
 
-        <label>Droits demandés :</label>
-        <input type="text" name="demandes_droits" value="<?= htmlspecialchars($rapport['demandes_droits'] ?? ''); ?>" placeholder="Boire, manger, avocat..." required>
+        <label>Droit Miranda lu à :</label>
+        <input type="time" name="miranda_time" value="<?= $rapport['miranda_time']; ?>" required>
 
-        <label>Heure des droits réalisés :</label>
-        <input type="time" name="heure_droits" value="<?= htmlspecialchars($rapport['heure_droits'] ?? ''); ?>" required>
+        <div id="droit-miranda-wrapper">
+            <div id="droit-label" <?= empty($miranda_droits) ? 'style="display:none;"' : ''; ?>>
+                <label>Droits demandés :</label>
+            </div>
+            <div id="droit-miranda-container">
+                <?php foreach ($miranda_droits as $droit): ?>
+                    <div class="droit-miranda-row" style="margin-bottom: 10px;">
+                        <select name="droit_miranda_nom[]" required>
+                            <option value="">-- Choisir un droit --</option>
+                            <?php foreach (["Appel", "Manger", "Boire", "EMS", "Avocat"] as $opt): ?>
+                                <option value="<?= $opt; ?>" <?= $droit['droit'] === $opt ? 'selected' : ''; ?>><?= $opt; ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <input type="time" name="droit_miranda_heure[]" value="<?= $droit['heure_droit']; ?>" required>
+                        <button type="button" onclick="this.parentElement.remove()">🗑</button>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+            <button type="button" class="btn-ajout" onclick="addDroitMiranda()">+ Ajouter un droit</button>
+        </div>
 
-        <button type="submit">Enregistrer les Modifications</button>
+        <div style="text-align: right; margin-top: 20px;">
+            <button type="submit" class="btn-principal">Enregistrer les Modifications</button>
+        </div>
     </form>
 </div>
 
 <script>
-    const amendes = <?= json_encode($amendesJS); ?>;
-    const selectedIndividus = new Set(<?= json_encode(array_column($individus_actuels, 'casier_id')); ?>);
-    const selectedAgents = new Set(<?= json_encode($agents_actuels); ?>);
+    const selectedIndividus = new Set();
+    const selectedAgents = new Set();
 
-    function updateAmendeRetentions() {
-        const motifId = document.getElementById("motif").value;
-        const tooltip = document.getElementById("info-tooltip");
-        const detailsDiv = document.getElementById("details-display");
+    function addDroitMiranda() {
+    document.getElementById('droit-label').style.display = 'block';
 
-        if (motifId && amendes[motifId]) {
-            document.getElementById("amende").value = amendes[motifId].montant || '';
-            document.getElementById("retention").value = amendes[motifId].peine || '';
+    const container = document.getElementById('droit-miranda-container');
+    const div = document.createElement('div');
+    div.classList.add('droit-miranda-row');
+    div.style.marginBottom = '10px';
+    div.innerHTML = `
+    <select name="droit_miranda_nom[]" required>
+        <option value="">-- Choisir un droit --</option>
+        <option value="Appel">Appel</option>
+        <option value="Manger">Manger</option>
+        <option value="Boire">Boire</option>
+        <option value="EMS">EMS</option>
+        <option value="Avocat">Avocat</option>
+    </select>
+    <input type="time" name="droit_miranda_heure[]" required>
+    <button type="button" onclick="this.parentElement.remove()">🗑</button>
+    `;
 
-            tooltip.onmouseover = function() {
-                detailsDiv.innerHTML = `<strong>${amendes[motifId].article} :</strong> ${amendes[motifId].details}`;
-                detailsDiv.style.display = "block";
-            };
-            tooltip.onmouseout = function() {
-                detailsDiv.style.display = "none";
-            };
-        } else {
-            document.getElementById("amende").value = '';
-            document.getElementById("retention").value = '';
-            detailsDiv.style.display = "none";
+    container.appendChild(div);
+}
+
+
+    function searchMotif() {
+        const query = document.getElementById('motif-search').value.trim();
+        if (query.length > 1) {
+            fetch(`/tablette/rapport/recherche_motif.php?query=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    const motifSelect = document.getElementById('motif-select');
+                    motifSelect.innerHTML = '<option value="">-- Sélectionnez un motif --</option>';
+                    data.forEach(motif => {
+                        const option = document.createElement('option');
+                        option.value = motif.id;
+                        option.textContent = motif.description;
+                        option.setAttribute('data-montant', motif.montant);
+                        option.setAttribute('data-peine', motif.peine);
+                        option.setAttribute('data-article', motif.article);
+                        option.setAttribute('data-details', motif.details);
+                        motifSelect.appendChild(option);
+                    });
+                });
         }
     }
 
+    function updateAmendeRetentions() {
+        const selected = document.getElementById('motif-select').selectedOptions[0];
+        document.getElementById('amende').value = selected.getAttribute('data-montant') || '';
+        document.getElementById('retention').value = selected.getAttribute('data-peine') || '';
+        document.getElementById('info-tooltip').setAttribute('title', `Article ${selected.getAttribute('data-article')}: ${selected.getAttribute('data-details')}`);
+    }
+
+    // Recherche dynamique individus
     document.getElementById('search-individu').addEventListener('input', function() {
         const query = this.value.trim();
         if (query.length > 1) {
@@ -248,8 +297,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         resultsDiv.style.display = 'none';
                     }
                 });
-        } else {
-            document.getElementById('individu-results').style.display = 'none';
         }
     });
 
@@ -265,50 +312,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             `;
             document.getElementById('individus-selected').appendChild(selectedDiv);
             updateIndividusInput();
+            document.getElementById('individu-results').style.display = 'none';
+            document.getElementById('search-individu').value = '';
         }
     }
 
-    function deleteIndividu(casierId, rapportId) {
-    if (!confirm("Êtes-vous sûr de vouloir supprimer cet individu ?")) return;
+    function removeIndividu(id) {
+        selectedIndividus.delete(id);
+        const selectedDiv = document.querySelector(`.individu-selected[data-id="${id}"]`);
+        if (selectedDiv) selectedDiv.remove();
+        updateIndividusInput();
+    }
 
-    fetch('/tablette/rapport/supprimer_individu.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: `rapport_id=${encodeURIComponent(rapportId)}&casier_id=${encodeURIComponent(casierId)}`
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Suppression réussie dans l'interface
-            const individuDiv = document.querySelector(`.individu-selected[data-id='${casierId}']`);
-            if (individuDiv) {
-                individuDiv.remove();
-            }
+    function updateIndividusInput() {
+        document.getElementById('individus-input').value = Array.from(selectedIndividus).join(',');
+    }
 
-            // Mettre à jour l'entrée cachée
-            const individusInput = document.getElementById('individus-input');
-            const currentIds = individusInput.value.split(',').filter(id => id !== casierId.toString());
-            individusInput.value = currentIds.join(',');
-
-            alert(data.message);
-        } else {
-            alert(data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Erreur lors de la suppression:', error);
-        alert("Une erreur s'est produite.");
-    });
-}
-
-
-function updateIndividusInput() {
-    const selectedIds = Array.from(selectedIndividus);
-    console.log("Mise à jour du champ individus-input avec les IDs :", selectedIds);
-    document.getElementById('individus-input').value = selectedIds.join(',');
-}
+    // Recherche dynamique agents
     document.getElementById('search-agent').addEventListener('input', function() {
         const query = this.value.trim();
         if (query.length > 1) {
@@ -334,8 +354,6 @@ function updateIndividusInput() {
                         resultsDiv.style.display = 'none';
                     }
                 });
-        } else {
-            document.getElementById('agent-results').style.display = 'none';
         }
     });
 
@@ -367,5 +385,3 @@ function updateIndividusInput() {
 </script>
 
 <?php include '../../includes/footer.php'; ?>
-</body>
-</html>

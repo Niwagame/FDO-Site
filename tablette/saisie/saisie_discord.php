@@ -15,7 +15,12 @@ function sendSaisieWithCasierToDiscord($officier_id, $individuDetails, $rapportD
     $message .= "**Objets saisis :**\n";
 
     foreach ($saisiesAjoutees as $saisie) {
-        $message .= "- {$saisie['nom']} : {$saisie['quantite']}\n";
+        $ligne = "- {$saisie['nom']}";
+        if (!empty($saisie['numero_serie'])) {
+            $ligne .= " (N°: {$saisie['numero_serie']})";
+        }
+        $ligne .= " : {$saisie['quantite']}\n";
+        $message .= $ligne;
     }
 
     $message .= "\n🕒 Ajouté le $date_now\n";
@@ -36,7 +41,12 @@ function sendSaisieWithoutCasierToDiscord($officier_id, $motif, $saisiesAjoutees
     $message .= "**Objets saisis :**\n";
 
     foreach ($saisiesAjoutees as $saisie) {
-        $message .= "- {$saisie['nom']} : {$saisie['quantite']}\n";
+        $ligne = "- {$saisie['nom']}";
+        if (!empty($saisie['numero_serie'])) {
+            $ligne .= " (N°: {$saisie['numero_serie']})";
+        }
+        $ligne .= " : {$saisie['quantite']}\n";
+        $message .= $ligne;
     }
 
     $message .= "\n🕒 Ajouté le $date_now\n";

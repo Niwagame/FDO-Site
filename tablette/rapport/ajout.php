@@ -1,5 +1,6 @@
 <?php
-include '../../config.php';
+session_start();
+require_once '../../config.php';
 include '../../includes/header.php';
 require_once 'rapport_discord.php';
 
@@ -14,11 +15,9 @@ if (
     exit();
 }
 
-
-// Utiliser le surnom Discord si disponible, sinon utiliser le pseudo global
 $officier_id = $_SESSION['discord_nickname'] ?? $_SESSION['discord_username'] ?? 'Inconnu';
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $date_arrestation = $_POST['date_arrestation'];
     $individus = explode(',', rtrim($_POST['individus'], ','));
     $agents = explode(',', rtrim($_POST['agents'], ','));
@@ -27,30 +26,35 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $retention = $_POST['retention'];
     $rapport_text = $_POST['rapport_text'];
     $coop = $_POST['coop'];
+    $heure_privation_liberte = $_POST['heure_privation_liberte'];
     $miranda_time = $_POST['miranda_time'];
-    $demandes_droits = $_POST['demandes_droits'];
-    $heure_droits = $_POST['heure_droits'];
-
-    // Concaténer les noms des agents impliqués pour les enregistrer dans officier_id
     $agents_concat = implode(', ', $agents);
 
     try {
-        // Insertion du rapport dans la table `rapports`
-        $stmt = $pdo->prepare("INSERT INTO rapports (date_arrestation, motif, amende, retention, rapport_text, coop, miranda_time, demandes_droits, heure_droits, officier_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$date_arrestation, $motif, $amende, $retention, $rapport_text, $coop, $miranda_time, $demandes_droits, $heure_droits, $agents_concat]);
+        $stmt = $pdo->prepare("INSERT INTO rapports (date_arrestation, motif, amende, retention, rapport_text, coop, heure_privation_liberte, miranda_time, officier_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$date_arrestation, $motif, $amende, $retention, $rapport_text, $coop, $heure_privation_liberte, $miranda_time, $agents_concat]);        
 
-        // Récupérer l'ID du rapport nouvellement inséré
         $rapport_id = $pdo->lastInsertId();
 
-        // Insérer les individus associés dans `rapports_individus`
         $stmt = $pdo->prepare("INSERT INTO rapports_individus (rapport_id, casier_id) VALUES (?, ?)");
         foreach ($individus as $casier_id) {
             $stmt->execute([$rapport_id, $casier_id]);
         }
 
-        // Appel de la fonction pour envoyer le message à Discord
-        sendReportCreationToDiscord($rapport_id);
+        // ✅ Insérer les droits Miranda un à un (réparé)
+        if (!empty($_POST['droit_miranda_nom']) && !empty($_POST['droit_miranda_heure'])) {
+            $stmt = $pdo->prepare("INSERT INTO droit_miranda (rapport_id, droit, heure_droit) VALUES (?, ?, ?)");
 
+            foreach ($_POST['droit_miranda_nom'] as $index => $droit_nom) {
+                $droit_heure = $_POST['droit_miranda_heure'][$index] ?? null;
+
+                if (!empty($droit_nom) && !empty($droit_heure)) {
+                    $stmt->execute([$rapport_id, $droit_nom, $droit_heure]);
+                }
+            }
+        }
+
+        sendReportCreationToDiscord($rapport_id);
         echo "<p>Rapport d'arrestation ajouté avec succès !</p>";
     } catch (PDOException $e) {
         echo "<p>Erreur lors de l'ajout du rapport : " . $e->getMessage() . "</p>";
@@ -65,34 +69,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <label>Date d'Arrestation :</label>
         <input type="date" name="date_arrestation" required>
 
-        <!-- Champ de recherche et sélection multiple des individus -->
         <label>Individus Impliqués :</label>
         <input type="text" id="search-individu" placeholder="Rechercher un individu...">
         <div id="individu-results" style="border: 1px solid #ddd; display: none;"></div>
-        <div id="individus-selected">
-            <h4>Individus Sélectionnés :</h4>
-        </div>
+        <div id="individus-selected"><h4>Individus Sélectionnés :</h4></div>
         <input type="hidden" name="individus" id="individus-input">
 
-        <!-- Champ de recherche et sélection multiple des agents -->
         <label>Agents Impliqués :</label>
         <input type="text" id="search-agent" placeholder="Rechercher un agent...">
         <div id="agent-results" style="border: 1px solid #ddd; display: none;"></div>
-        <div id="agents-selected">
-            <h4>Agents Sélectionnés :</h4>
-        </div>
+        <div id="agents-selected"><h4>Agents Sélectionnés :</h4></div>
         <input type="hidden" name="agents" id="agents-input">
 
-        <!-- Champ de recherche pour un motif -->
         <label>Rechercher un Motif :</label>
         <input type="text" id="motif-search" placeholder="Saisir un motif..." oninput="searchMotif()" autocomplete="off">
 
-        <!-- Liste déroulante des motifs dynamiquement remplie -->
         <div style="display: flex; align-items: center; gap: 5px;">
             <select name="motif" id="motif-select" onchange="updateAmendeRetentions()" required style="width: 100%; margin-top: 5px;">
                 <option value="">-- Sélectionnez un motif --</option>
             </select>
-            <!-- Point d'interrogation pour afficher les détails du motif sélectionné -->
             <span id="info-tooltip" style="cursor: pointer; font-size: 20px; color: red;" title="">❓</span>
         </div>
 
@@ -108,25 +103,54 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <label>Individu Coopératif (0 à 10) :</label>
         <input type="number" name="coop" min="0" max="10" required>
 
-        <label>Droits Miranda lus à :</label>
+        <label>Heure de privation de liberté :</label>
+        <input type="time" name="heure_privation_liberte" required>
+
+        <label>Droit Miranda lu à :</label>
         <input type="time" name="miranda_time" required>
 
-        <label>Droits demandés :</label>
-        <input type="text" name="demandes_droits" placeholder="Boire, manger, avocat..." required>
+        <div id="droit-miranda-wrapper">
+            <div id="droit-label" style="display: none; margin-top: 10px;">
+                <label>Droits demandés :</label>
+            </div>
+            <div id="droit-miranda-container"></div>
+            <button type="button" class="btn-ajout" onclick="addDroitMiranda()">+ Ajouter un droit</button>
+        </div>
 
-        <label>Heure des droits réalisés :</label>
-        <input type="time" name="heure_droits" required>
-
-        <button type="submit">Ajouter le Rapport</button>
+        <div style="text-align: right; margin-top: 20px;">
+            <button type="submit" class="btn-principal">Ajouter le Rapport</button>
+        </div>
     </form>
 </div>
 
-<!-- JavaScript pour la recherche de motifs, d'individus et d'agents -->
 <script>
     const selectedIndividus = new Set();
     const selectedAgents = new Set();
 
-    // Fonction de recherche de motif
+    function addDroitMiranda() {
+    document.getElementById('droit-label').style.display = 'block';
+
+    const container = document.getElementById('droit-miranda-container');
+    const div = document.createElement('div');
+    div.classList.add('droit-miranda-row');
+    div.style.marginBottom = '10px';
+    div.innerHTML = `
+    <select name="droit_miranda_nom[]" required>
+        <option value="">-- Choisir un droit --</option>
+        <option value="Appel">Appel</option>
+        <option value="Manger">Manger</option>
+        <option value="Boire">Boire</option>
+        <option value="EMS">EMS</option>
+        <option value="Avocat">Avocat</option>
+    </select>
+    <input type="time" name="droit_miranda_heure[]" required>
+    <button type="button" onclick="this.parentElement.remove()">🗑</button>
+    `;
+
+    container.appendChild(div);
+}
+
+
     function searchMotif() {
         const query = document.getElementById('motif-search').value.trim();
         if (query.length > 1) {
@@ -145,32 +169,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         option.setAttribute('data-details', motif.details);
                         motifSelect.appendChild(option);
                     });
-                })
-                .catch(error => console.error('Erreur de recherche de motif:', error));
-        } else {
-            document.getElementById('motif-select').innerHTML = '<option value="">-- Sélectionnez un motif --</option>';
+                });
         }
     }
 
     function updateAmendeRetentions() {
-        const motifSelect = document.getElementById('motif-select');
-        const selectedOption = motifSelect.options[motifSelect.selectedIndex];
-        const infoTooltip = document.getElementById('info-tooltip');
-
-        if (selectedOption.value) {
-            document.getElementById('amende').value = selectedOption.getAttribute('data-montant') || '';
-            document.getElementById('retention').value = selectedOption.getAttribute('data-peine') || '';
-
-            // Mettre à jour le tooltip avec les détails du motif pour qu’il soit uniquement accessible au survol
-            infoTooltip.setAttribute('title', `Article ${selectedOption.getAttribute('data-article') || 'Non spécifié'} : ${selectedOption.getAttribute('data-details') || 'Détails non spécifiés'}`);
-        } else {
-            document.getElementById('amende').value = '';
-            document.getElementById('retention').value = '';
-            infoTooltip.removeAttribute('title');
-        }
+        const selected = document.getElementById('motif-select').selectedOptions[0];
+        document.getElementById('amende').value = selected.getAttribute('data-montant') || '';
+        document.getElementById('retention').value = selected.getAttribute('data-peine') || '';
+        document.getElementById('info-tooltip').setAttribute('title', `Article ${selected.getAttribute('data-article')}: ${selected.getAttribute('data-details')}`);
     }
 
-    // Recherche dynamique pour les individus
+    // Recherche dynamique individus
     document.getElementById('search-individu').addEventListener('input', function() {
         const query = this.value.trim();
         if (query.length > 1) {
@@ -195,10 +205,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     } else {
                         resultsDiv.style.display = 'none';
                     }
-                })
-                .catch(error => console.error('Erreur de recherche:', error));
-        } else {
-            document.getElementById('individu-results').style.display = 'none';
+                });
         }
     });
 
@@ -230,7 +237,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         document.getElementById('individus-input').value = Array.from(selectedIndividus).join(',');
     }
 
-    // Recherche dynamique pour les agents
+    // Recherche dynamique agents
     document.getElementById('search-agent').addEventListener('input', function() {
         const query = this.value.trim();
         if (query.length > 1) {
@@ -255,10 +262,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     } else {
                         resultsDiv.style.display = 'none';
                     }
-                })
-                .catch(error => console.error('Erreur de recherche:', error));
-        } else {
-            document.getElementById('agent-results').style.display = 'none';
+                });
         }
     });
 
