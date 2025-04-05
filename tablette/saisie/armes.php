@@ -7,7 +7,7 @@ if (!isset($_GET['nom'])) {
     exit();
 }
 
-$role_bco = $roles['bco'];
+$role_bco = $roles['bcso'];
 
 if (
     !isset($_SESSION['user_authenticated']) || 

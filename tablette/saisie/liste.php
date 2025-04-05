@@ -2,7 +2,7 @@
 session_start();
 require_once '../../config.php';
 
-$role_bco = $roles['bco'];
+$role_bco = $roles['bcso'];
 
 if (
     !isset($_SESSION['user_authenticated']) || 

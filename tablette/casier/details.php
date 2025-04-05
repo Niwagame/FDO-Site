@@ -3,7 +3,7 @@ session_start();
 require_once '../../config.php';
 require_once 'casier_discord.php';
 
-$roles_bcs = $roles['bco'];
+$roles_bcs = $roles['bcso'];
 $roles_cs  = $roles['cs'];
 $roles_doj = $roles['doj'];
 

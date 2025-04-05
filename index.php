@@ -18,8 +18,11 @@ require_once 'config.php'; // Assurez-vous que le chemin est correct
         <a href="#code-radio">Code Radio</a>
         <a href="#escouade">Escouade</a>
         <a href="#juridiction">Juridiction</a>
+        <a href="#categorie-armes">Catégorie Armes</a>
         <a href="#droit">Droit</a>
         <a href="/car.php">Véhicule</a>
+        <a href="/tenues.php">Tenues</a>
+        <a href="/grades.php">Grades</a>
     </div>
 
     <!-- Bouton Login avec redirection conditionnelle -->
@@ -84,6 +87,21 @@ require_once 'config.php'; // Assurez-vous que le chemin est correct
     <img src="/assets/site/carte_frontiere.png" alt="Carte de la Juridiction BCSO">
 </div>
 
+<div id="categorie-armes" class="section-title">Catégorie Armes</div>
+<div style="max-width: 1100px; margin: 0 auto;">
+<table class="table-style">
+    <tr><th>Catégorie</th><th>Armes Concernées</th></tr>
+    <tr><td>Catégorie A</td><td>Armes blanches</td></tr>
+    <tr><td>Catégorie B</td><td>Walter PPK et Vintage Pistol</td></tr>
+    <tr><td>Catégorie C</td><td>Beretta, Five Seven et HK P7</td></tr>
+    <tr><td>Catégorie D</td><td>Calibre .50, Desert Eagle, Revolver et Pietta 1873</td></tr>
+    <tr><td>Catégorie E</td><td>Mosenberg, Double Barrel, Winchester, Tec-9, Uzi, Scorpion, Mac-11, Glock 18 et Saiga 12K</td></tr>
+    <tr><td>Catégorie F</td><td>AK-U, Gusenberg, AK-47 et BullPup</td></tr>
+    <tr><td>Catégorie G</td><td>Mousquet</td></tr>
+    <tr><td>Catégorie H</td><td>Explosif et Molotov</td></tr>
+</table>
+</div>
+
 <div id="droit" class="section-title">Droits Miranda</div>
 <div class="droit-content">
     <p><strong>Monsieur/Madame (X),</strong></p>
@@ -128,7 +146,7 @@ require_once 'config.php'; // Assurez-vous que le chemin est correct
 
 
 <footer>
-    <div class="footer-text">© 2025 BCSO (1.0.4) - Tous droits réservés - Niwagame</div>
+    <div class="footer-text">© 2025 BCSO (1.0.5) - Tous droits réservés - Niwagame</div>
 </footer>
 
 </body>

@@ -2,7 +2,7 @@
 session_start();
 require_once '../../config.php';
 
-$roles_bcs = $roles['bco'];
+$roles_bcs = $roles['bcso'];
 $roles_doj = $roles['doj'];
 
 if (

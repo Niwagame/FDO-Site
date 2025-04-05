@@ -3,7 +3,7 @@ session_start();
 require_once '../../config.php';
 
 // Récupère l'ID du rôle BCSO depuis config.ini
-$role_bco = $roles['bco'] ?? null;
+$role_bco = $roles['bcso'] ?? null;
 
 // Vérifie l'authentification et l'autorisation BCSO
 if (

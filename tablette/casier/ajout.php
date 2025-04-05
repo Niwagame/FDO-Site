@@ -7,7 +7,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // Récupère l'ID du rôle BCSO depuis config.ini
-$role_bco = $roles['bco'] ?? null;
+$role_bco = $roles['bcso'] ?? null;
 
 // Vérifie l'authentification et l'autorisation BCSO
 if (
@@ -32,6 +32,7 @@ $groups = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <?php include '../../includes/header.php'; ?>
 <div class="container">
+<?php if (!empty($message)) echo $message; ?>
 <link rel="stylesheet" href="../../css/styles.css">
     <h2>Ajouter un Casier</h2>
     <form action="ajout.php" method="POST" enctype="multipart/form-data">

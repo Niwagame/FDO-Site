@@ -16,15 +16,36 @@ if (
     echo "<p style='color: red; text-align: center;'>Accès refusé : seuls les membres du BCI ou du DOJ peuvent accéder à cette page.</p>";
     exit();
 }
+$search = $_GET['q'] ?? null;
 
-// Récupération des interrogatoires avec nom/prénom et ID casier
-$stmt = $pdo->query("
-    SELECT i.id, i.created_at, i.agent_id, i.casier_id, c.nom, c.prenom
-    FROM interrogatoires i
-    LEFT JOIN casiers c ON i.casier_id = c.id
-    ORDER BY i.created_at DESC
-");
-$interrogatoires = $stmt->fetchAll(PDO::FETCH_ASSOC);
+if ($search) {
+    $like = '%' . $search . '%';
+    $stmt = $pdo->prepare("
+        SELECT i.id, i.created_at, i.agent_id, i.casier_id, c.nom, c.prenom
+        FROM interrogatoires i
+        LEFT JOIN casiers c ON i.casier_id = c.id
+        WHERE 
+            i.deposition LIKE :search OR 
+            i.analyse LIKE :search OR 
+            i.hypotheses LIKE :search OR 
+            i.faits_importants LIKE :search OR 
+            i.questions_posees LIKE :search OR 
+            i.reponses LIKE :search OR 
+            i.infos_complementaires LIKE :search
+        ORDER BY i.created_at DESC
+    ");
+    $stmt->execute(['search' => $like]);
+    $interrogatoires = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} else {
+    $stmt = $pdo->query("
+        SELECT i.id, i.created_at, i.agent_id, i.casier_id, c.nom, c.prenom
+        FROM interrogatoires i
+        LEFT JOIN casiers c ON i.casier_id = c.id
+        ORDER BY i.created_at DESC
+    ");
+    $interrogatoires = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -39,6 +60,12 @@ $interrogatoires = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <div class="container">
     <h2>📄 Liste des Interrogatoires</h2>
+
+    <form method="GET" style="margin-bottom: 20px;">
+    <input type="text" name="q" placeholder="Rechercher un mot-clé..." value="<?= htmlspecialchars($_GET['q'] ?? '') ?>" style="width: 300px; padding: 5px;">
+    <button type="submit">Rechercher</button>
+    </form>
+
 
     <?php if (count($interrogatoires) > 0): ?>
         <table>

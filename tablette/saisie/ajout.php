@@ -7,7 +7,7 @@ $selectedCasier = null;
 $rapports = [];
 $objetOptions = [];
 
-$role_bco = $roles['bco'];
+$role_bco = $roles['bcso'];
 
 if (
     !isset($_SESSION['user_authenticated']) || 

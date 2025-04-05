@@ -4,7 +4,7 @@ include '../includes/header.php';
 require_once __DIR__ . '/../bci/vendor/autoload.php';
 
 // Récupère l'ID du rôle BCSO depuis config.ini
-$role_bco = $roles['bco'] ?? null;
+$role_bco = $roles['bcso'] ?? null;
 
 // Vérifie l'authentification et l'autorisation BCSO
 if (
@@ -22,12 +22,15 @@ use Google\Service\Drive;
 
 // 🔐 Configuration Google Client
 $client = new Client();
-$client->setAuthConfig(__DIR__ . '/../bci/credentials.json');
+$client->setAuthConfig(__DIR__ . '/../credentials.json');
 $client->setScopes([Docs::DOCUMENTS, Drive::DRIVE]);
 $client->setHttpClient(new \GuzzleHttp\Client(['verify' => false])); // Désactiver SSL temporairement
 
-// 🔑 ID du modèle Google Docs
-$templateId = '13QS4yUV4gsvRfj-ifX97lImCW0SULEGx_A1mMllfQEY';
+// 🔑 ID du modèle Google Docs depuis config.ini
+$templateId = $config['modele_gdoc']['convocation'] ?? null;
+if (!$templateId) {
+    die("<p style='color:red;'>❌ Erreur : L'ID du modèle Google Docs est introuvable dans le fichier config.ini.</p>");
+}
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $nom = $_POST['nom'];

@@ -4,7 +4,7 @@ require_once '../../config.php';
 include '../../includes/header.php';
 require_once 'rapport_discord.php';
 
-$role_bco = $roles['bco'];
+$role_bco = $roles['bcso'];
 
 if (
     !isset($_SESSION['user_authenticated']) || 
@@ -249,12 +249,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (data.length > 0) {
                         resultsDiv.style.display = 'block';
                         data.forEach(agent => {
-                            if (!selectedAgents.has(agent.nom)) {
+                            const display = `${agent.matricule} | ${agent.prenom} ${agent.nom}`;
+                            if (!selectedAgents.has(display)) {
                                 const div = document.createElement('div');
                                 div.classList.add('agent-result');
                                 div.innerHTML = `
-                                    <span>${agent.nom}</span>
-                                    <button type="button" onclick="addAgent('${agent.nom}')">+</button>
+                                    <span>${display}</span>
+                                    <button type="button" onclick="addAgent('${display}')">+</button>
                                 `;
                                 resultsDiv.appendChild(div);
                             }

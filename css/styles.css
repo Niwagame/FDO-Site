@@ -619,3 +619,9 @@ ul li {
     margin-top: 10px;
 }
 
+.image-tenue {
+    display: block;
+    margin: 20px auto;
+    max-width: 200px;
+    height: auto;
+}

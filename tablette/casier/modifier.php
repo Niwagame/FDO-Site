@@ -10,7 +10,7 @@ if (!isset($_GET['id'])) {
 }
 
 // 🔐 Vérifie authentification et rôle BCSO
-$role_bco = $roles['bco'] ?? null;
+$role_bco = $roles['bcso'] ?? null;
 
 if (
     !isset($_SESSION['user_authenticated']) || 
@@ -116,7 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </select>
 
         <label>Grade :</label>
-        <input type="text" name="grade" value="<?= htmlspecialchars($individu['grade'] ?? ''); ?>" required>
+        <input type="text" name="grade" value="<?= htmlspecialchars($individu['grade'] ?? ''); ?>">
 
         <!-- Liste déroulante pour les entreprises -->
         <label>Entreprise :</label>

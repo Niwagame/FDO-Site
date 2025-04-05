@@ -1,3 +1,25 @@
+## [1.0.5] - 2025-04-03  
+### Ajouté  
+- Dans index.php ajout du tableau des catégories d'armes
+- Dans intérrogatoire ajout d'une barre de chercher pour affichier les intérrogatoire qui ont le mot clés recherche.
+- Dans index.php ajout du lien pour accéder a la page tenu
+- Ajout d'une page pour voir les tenues par grade
+- Ajout d'un bouton export dans la partit intérrogatoire, pour exporter l'intérrogatoire dans un google doc
+- Ajout d'une pages des montée en grades 
+- Ajout de la partit SA pour afficher la liste des effectif du BCSO, avec les unité, grade etc...
+- Ajout d'une page details pour afficher le details de chaque agent
+- Ajout d'une page d'ajout pour "Numeros de téléphone", "Photo d'identiter" et "Numéros de série"
+- Ajout d'une page statistique pour voir le total d'amende mis par semaine.
+
+### Modifié  
+- Suppression de la table "Effectif"
+- Correction de la page ajout et modifier dans "rapport" pour faire la recherche d'agent dans la table "sa_effectif"
+
+### Corrigé  
+- Bug où il étais possible de crée de doublons de casier, maintanant la vérification de fait bien (nom, prenom, date de naissance)
+- Meilleur selection d'individue dans l'ajout de plainte + possibilité de changer le numéros de téléphone
+- Permissions le mot étais "BCSO" pas "BCO"
+
 ## [1.0.4] - 2025-04-03  
 ### Ajouté  
 - Création de la table `droit_miranda` pour enregistrer individuellement les droits lus (droit + heure).

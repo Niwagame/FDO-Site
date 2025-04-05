@@ -7,7 +7,7 @@ if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !
 }
 
 // Autoriser uniquement les rôles BCO ou DOJ
-if (!hasRole($roles['bco'], $roles['doj'])) {
+if (!hasRole($roles['bcso'], $roles['doj'])) {
     echo "<p style='color:red;text-align:center;'>Accès refusé : vous n'avez pas les permissions nécessaires pour accéder à cette page.</p>";
     exit();
 }

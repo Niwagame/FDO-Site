@@ -2,7 +2,7 @@
 session_start();
 require_once '../../config.php';
 
-$role_bco = $roles['bco'];
+$role_bco = $roles['bcso'];
 $role_doj = $roles['doj'];
 
 // Vérifie que l'utilisateur a l’un des rôles requis

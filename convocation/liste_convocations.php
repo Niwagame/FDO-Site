@@ -2,7 +2,7 @@
 include '../config.php';
 include '../includes/header.php';
 
-$role_bco = $roles['bco'];
+$role_bco = $roles['bcso'];
 $role_doj = $roles['doj'];
 
 if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true || !hasRole($role_bco) && !hasRole($role_doj)) {

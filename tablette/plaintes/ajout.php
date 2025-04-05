@@ -3,7 +3,7 @@ include '../../config.php';
 include '../../includes/header.php';
 
 // 🔐 Vérifie authentification et rôle BCSO
-$role_bco = $roles['bco'] ?? null;
+$role_bco = $roles['bcso'] ?? null;
 
 if (
     !isset($_SESSION['user_authenticated']) || 
@@ -35,7 +35,7 @@ $agent_id = $_SESSION['discord_nickname'] ?? $_SESSION['discord_username'] ?? 'I
         </select>
 
         <label>Numéro de téléphone du plaignant :</label>
-        <input type="tel" name="num_tel_plaignant" id="num_tel_plaignant" placeholder="Numéro de téléphone du plaignant" required readonly>
+        <input type="tel" name="num_tel_plaignant" id="num_tel_plaignant" placeholder="Numéro de téléphone du plaignant" required >
 
         <!-- Informations de la personne visée -->
         <label>Prénom Nom de la personne visée :</label>
@@ -51,7 +51,7 @@ $agent_id = $_SESSION['discord_nickname'] ?? $_SESSION['discord_username'] ?? 'I
         </select>
 
         <label>Numéro de téléphone de la personne visée :</label>
-        <input type="tel" name="num_tel_visee" id="num_tel_visee" placeholder="Numéro de téléphone de la personne visée" readonly>
+        <input type="tel" name="num_tel_visee" id="num_tel_visee" placeholder="Numéro de téléphone de la personne visée">
 
         <label>Description physique :</label>
         <textarea name="description_physique" placeholder="Description physique de la personne visée" required></textarea>
@@ -92,12 +92,16 @@ $agent_id = $_SESSION['discord_nickname'] ?? $_SESSION['discord_username'] ?? 'I
             document.getElementById(resultsId).style.display = 'none';
         }
     }
+    
+    function resultsIdFromInput(inputId) {
+    return inputId === 'search-plaignant' ? 'plaignant-results' : 'visee-results';
+    }
 
     function selectIndividu(id, nom, prenom, num_tel, inputId, inputHiddenId, numTelId) {
         document.getElementById(inputId).value = nom + ' ' + prenom;
         document.getElementById(inputHiddenId).value = id;
         document.getElementById(numTelId).value = num_tel;
-        document.getElementById(inputId + '-results').style.display = 'none';
+        document.getElementById(resultsIdFromInput(inputId)).style.display = 'none';
     }
 
     document.getElementById('search-plaignant').addEventListener('input', () => searchIndividu('search-plaignant', 'plaignant-results', 'plaignant-input', 'num_tel_plaignant'));

@@ -3,7 +3,7 @@ session_start();
 require_once '../../config.php';
 
 // 🔐 Vérifie authentification et rôle BCSO
-$role_bco = $roles['bco'] ?? null;
+$role_bco = $roles['bcso'] ?? null;
 
 if (
     !isset($_SESSION['user_authenticated']) || 

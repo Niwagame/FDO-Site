@@ -65,6 +65,14 @@ if (!empty($interrogatoire['fichiers_media'])) {
 
     <p><strong>Individu interrogé :</strong> <?= htmlspecialchars($interrogatoire['prenom'] . ' ' . $interrogatoire['nom']); ?></p>
     <p><strong>Agent :</strong> <?= htmlspecialchars($interrogatoire['agent_id'] ?? 'Inconnu'); ?></p>
+    <p><strong>Document exporté :</strong> 
+    <?php if (!empty($interrogatoire['lien_document'])): ?>
+        <a href="<?= htmlspecialchars($interrogatoire['lien_document']); ?>" target="_blank">Voir le document</a>
+    <?php else: ?>
+        Aucun
+    <?php endif; ?>
+    </p>
+
 
     <hr>
 
@@ -111,9 +119,14 @@ if (!empty($interrogatoire['fichiers_media'])) {
     <?php endif; ?>
 
     <div class="button-container">
-        <a href="modifier.php?id=<?= $interrogatoire['id']; ?>" class="button">✏️ Modifier</a>
-        <a href="liste.php" class="button">↩️ Retour à la liste</a>
+    <a href="modifier.php?id=<?= $interrogatoire['id']; ?>" class="button">✏️ Modifier</a>
+    <a href="liste.php" class="button">↩️ Retour à la liste</a>
+    <form action="exporter_interrogatoire.php" method="post" style="display:inline;">
+        <input type="hidden" name="interrogatoire_id" value="<?= $interrogatoire['id']; ?>">
+        <button type="submit" class="button">📄 Exporter</button>
+    </form>
     </div>
+
 </div>
 
 <?php include '../../includes/footer.php'; ?>

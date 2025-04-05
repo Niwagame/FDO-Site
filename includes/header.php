@@ -26,7 +26,6 @@
             <div class="dropdown">
                 <button class="dropbtn">INFO</button>
                 <div class="dropdown-content">
-                    <a href="/info/effectif.php">Effectif</a>
                     <a href="/info/entreprise/liste.php">Entreprise</a>
                     <a href="/info/group/liste.php">Groupe</a>
                     <a href="/info/code_penal.php">Code Penal</a>
@@ -38,6 +37,14 @@
                     <a href="/bci/rapport.php">Rapport</a>
                     <a href="/bci/interrogatoire/liste.php">Interrogatoires</a>
                 </div>
+            </div>
+            <div class="dropdown">
+            <button class="dropbtn">SA</button>
+            <div class="dropdown-content">
+                <a href="/sa/sa_effectif.php">Effectif</a>
+                <a href="/sa/matricules_disponibles.php">Matricules disponibles</a>
+                <a href="/sa/stats.php">Stats</a>
+            </div>
             </div>
         </nav>
     </header>

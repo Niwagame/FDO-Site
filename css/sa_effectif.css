@@ -1,0 +1,172 @@
+/* === Refonte Visuelle + Lisibilité === */
+
+.table-container {
+    max-width: 98%;
+    margin: auto;
+    padding-top: 20px;
+}
+
+.table-container h2 {
+    text-align: center;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 1.6em;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #444;
+    padding-bottom: 5px;
+}
+
+/* ✅ Bouton */
+.btn-refresh {
+    padding: 8px 16px;
+    background-color: #f0ad4e;
+    color: black;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    transition: background-color 0.3s, transform 0.1s;
+}
+.btn-refresh:hover {
+    background-color: #ec971f;
+    transform: scale(1.02);
+}
+
+/* 🧠 Table */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #1b1b1b;
+    color: #f4f4f4;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 0.92em;
+    box-shadow: 0 0 15px rgba(0,0,0,0.6);
+    margin-bottom: 30px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+thead th {
+    background-color: #111;
+    color: #ccc;
+    padding: 12px;
+    border: 1px solid #2d2d2d;
+    font-size: 0.83em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;         /* ✅ Centrage horizontal */
+    vertical-align: middle;     /* ✅ Centrage vertical */
+}
+
+tbody td {
+    text-align: center;
+    padding: 10px;
+    border: 1px solid #2e2e2e;
+    transition: background-color 0.25s ease;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #222;
+}
+
+tbody tr:hover {
+    background-color: #2d2d2d;
+}
+
+/* ✅ Grade mis en valeur */
+.grade-row td:nth-child(4) {
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+/* ✨ Checkmark bien visible */
+.spec-cell {
+    background-color: #1a1a1a;
+    color: #888;
+    font-weight: bold;
+}
+
+.cell-checked {
+    color: #fff;
+    font-size: 1.1em;
+}
+
+/* 🔳 Couleurs de rôles */
+.cell-checked.bco         { background-color: #6b4f28; }
+.cell-checked.bci         { background-color: #bf8040; }
+.cell-checked.sert        { background-color: #d2892f; }
+.cell-checked.ftf         { background-color: #b97333; }
+.cell-checked.sa          { background-color: #8888ff; color: #000; }
+
+.cell-checked.k9          { background-color: #8b5a2b; }
+.cell-checked.cnu         { background-color: #555; }
+.cell-checked.pru         { background-color: #337799; }
+.cell-checked.mru         { background-color: #447744; }
+
+.cell-checked.mary        { background-color: #0044ff; }
+.cell-checked.hsu         { background-color: #cccccc; color: #000; }
+.cell-checked.asu         { background-color: #e0b85f; color: #000; }
+.cell-checked.marine      { background-color: #1f3b75; }
+
+.cell-checked.terrain     { background-color: #664422; }
+.cell-checked.negociation { background-color: #9933cc; }
+.cell-checked.syndicat    { background-color: #cc4444; }
+
+/* 🏅 Couleurs de grade */
+.grade-row.sheriff         { background-color: #a30000; color: #fff; }
+.grade-row.under-sheriff   { background-color: #cc3333; }
+.grade-row.major           { background-color: #b54b4b; }
+.grade-row.captain         { background-color: #e67300; }
+.grade-row.lieutenant      { background-color: #ff8800; }
+.grade-row.sergeant,
+.grade-row.sergeant-test   { background-color: #ffbb33; color: #000; }
+.grade-row.senior-deputy   { background-color: #99cc00; color: #000; }
+.grade-row.deputy-iii      { background-color: #3399ff; }
+.grade-row.deputy-ii       { background-color: #66b3ff; }
+.grade-row.deputy-i        { background-color: #99ccff; }
+.grade-row.junior-deputy   { background-color: #d6eaff; color: #000; }
+
+/* 📱 Responsive Design */
+@media screen and (max-width: 768px) {
+    table {
+        font-size: 0.85em;
+    }
+
+    .btn-refresh {
+        width: 100%;
+        margin-top: 10px;
+    }
+
+    thead tr:first-child th {
+        font-size: 0.75em;
+    }
+
+    .table-container h2 {
+        font-size: 1.2em;
+    }
+}
+
+a.matricule-link {
+    color: #00aaff;
+    font-weight: bold;
+    text-decoration: none;
+}
+a.matricule-link:hover {
+    text-decoration: underline;
+    color: #00ddff;
+}
+
+.btn-edit {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 6px 12px;
+    background-color: #ffaa00;
+    color: #000;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+}
+.btn-edit:hover {
+    background-color: #ffc107;
+}
